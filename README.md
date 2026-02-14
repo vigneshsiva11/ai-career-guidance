@@ -14,8 +14,6 @@ Many students struggle with:
 - 📊 No skill gap awareness  
 - 🧠 No personalized mentoring  
 
-Most platforms provide generic advice but fail to generate personalized, actionable career paths.
-
 ---
 
 ## 💡 Solution – AI Career Guidance System
@@ -49,7 +47,6 @@ Backend:
 
 Database:
 - MongoDB (Atlas)
-- Mongoose ODM
 
 AI Layer:
 - Rule-based NLP classification
@@ -59,7 +56,7 @@ AI Layer:
 
 Authentication:
 - JWT (HTTP-only cookies)
-- Google OAuth 2.0 (optional)
+- Google OAuth 2.0 
 
 ---
 
@@ -148,7 +145,6 @@ Collections:
 - ASSESSMENT
 - ROADMAP
 - ACTIVITY_LOG
-- CHAT_HISTORY (optional)
 
 Relationships:
 
