@@ -88,6 +88,48 @@ export default function HomePage() {
     fetchCurrentUser();
   }, []);
 
+  useEffect(() => {
+    const sections = document.querySelectorAll<HTMLElement>("[data-fade-in]");
+    if (sections.length === 0) return;
+
+    sections.forEach((section) => {
+      section.setAttribute("data-reveal-state", "pending");
+    });
+
+    // Hard fallback: never leave content hidden.
+    const fallbackTimer = window.setTimeout(() => {
+      sections.forEach((section) => {
+        section.setAttribute("data-reveal-state", "visible");
+      });
+    }, 600);
+
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      sections.forEach((section) => {
+        section.setAttribute("data-reveal-state", "visible");
+      });
+      window.clearTimeout(fallbackTimer);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.setAttribute("data-reveal-state", "visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      observer.disconnect();
+    };
+  }, []);
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
@@ -132,16 +174,16 @@ export default function HomePage() {
   return (
     <div
       key={refreshKey}
-      className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 overflow-x-hidden"
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex flex-col"
     >
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-6 md:px-16">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+              className="flex items-center space-x-2 rounded-full px-2 py-1 transition-all duration-300 ease-in-out hover:bg-white/80"
             >
               <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
               <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
@@ -150,13 +192,15 @@ export default function HomePage() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex space-x-2 xl:space-x-4 items-center">
+            <nav className="hidden lg:flex items-center rounded-full border border-slate-200 bg-white p-1 shadow-md">
               <Link href="/auth/register/student">
                 <Button
                   variant={pathname === "/ask" ? "default" : "outline"}
                   size="sm"
-                  className={`text-xs xl:text-sm ${
-                    pathname === "/ask" ? "bg-black text-white" : ""
+                  className={`rounded-full border-0 text-xs xl:text-sm transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 ${
+                    pathname === "/ask"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                      : "bg-transparent hover:bg-slate-50"
                   }`}
                 >
                   {t(lang, "navbar_ask", "Ask Question")}
@@ -166,7 +210,7 @@ export default function HomePage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-xs xl:text-sm"
+                  className="rounded-full border-0 bg-transparent text-xs xl:text-sm transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-slate-50"
                 >
                   {t(lang, "navbar_quiz", "Quiz")}
                 </Button>
@@ -175,7 +219,7 @@ export default function HomePage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-xs xl:text-sm"
+                  className="rounded-full border-0 bg-transparent text-xs xl:text-sm transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-slate-50"
                 >
                   {t(lang, "navbar_career", "Career Guidance")}
                 </Button>
@@ -183,7 +227,7 @@ export default function HomePage() {
               <div className="relative">
                 <select
                   aria-label="Language selector"
-                  className="border rounded px-2 py-1.5 text-xs xl:text-sm"
+                  className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs xl:text-sm text-slate-700"
                   onChange={(e) => setStoredLanguage(e.target.value as any)}
                   value={lang}
                 >
@@ -198,27 +242,43 @@ export default function HomePage() {
             <div className="hidden lg:flex items-center gap-2 xl:gap-3">
               {authUser ? (
                 <>
-                  <span className="text-xs xl:text-sm text-gray-700">
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs xl:text-sm text-slate-700">
                     Welcome, {authUser.name} ({roleLabel})
                   </span>
                   <Link href="/dashboard">
-                    <Button variant="outline" size="sm" className="text-xs xl:text-sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full border-slate-300 bg-white text-xs xl:text-sm shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-slate-50"
+                    >
                       Dashboard
                     </Button>
                   </Link>
-                  <Button variant="outline" size="sm" className="text-xs xl:text-sm" onClick={handleLogout}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full border-slate-300 bg-white text-xs xl:text-sm shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-slate-50"
+                    onClick={handleLogout}
+                  >
                     Logout
                   </Button>
                 </>
               ) : (
                 <>
                   <Link href="/login">
-                    <Button variant="outline" size="sm" className="text-xs xl:text-sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full border-slate-300 bg-white text-xs xl:text-sm shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-slate-50"
+                    >
                       Login
                     </Button>
                   </Link>
                   <Link href="/auth/register/student">
-                    <Button size="sm" className="text-xs xl:text-sm">
+                    <Button
+                      size="sm"
+                      className="rounded-full bg-indigo-600 text-xs xl:text-sm text-white shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-indigo-700 hover:shadow-lg"
+                    >
                       Sign Up
                     </Button>
                   </Link>
@@ -231,7 +291,7 @@ export default function HomePage() {
               <div className="relative">
                 <select
                   aria-label="Language selector"
-                  className="border rounded px-2 py-1.5 text-xs"
+                  className="rounded-full border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700"
                   onChange={(e) => setStoredLanguage(e.target.value as any)}
                   value={lang}
                 >
@@ -245,7 +305,7 @@ export default function HomePage() {
                 variant="ghost"
                 size="icon"
                 onClick={toggleMobileMenu}
-                className="h-10 w-10"
+                className="h-10 w-10 rounded-full border border-slate-300 bg-white"
                 aria-label="Toggle mobile menu"
               >
                 {isMobileMenuOpen ? (
@@ -259,44 +319,44 @@ export default function HomePage() {
 
           {/* Mobile Navigation Menu */}
           {isMobileMenuOpen && (
-            <div className="lg:hidden border-t bg-white">
-              <div className="px-2 pt-2 pb-3 space-y-1">
+            <div className="lg:hidden border-t border-slate-200 bg-white/90 backdrop-blur-md">
+              <div className="space-y-1 px-2 pt-2 pb-3">
                 <Link
                   href="/auth/register/student"
-                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                  className="block rounded-xl px-3 py-2 text-base font-medium text-slate-700 transition-all duration-300 ease-in-out hover:bg-slate-50"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {t(lang, "navbar_ask", "Ask Question")}
                 </Link>
                 <Link
                   href="/quiz"
-                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                  className="block rounded-xl px-3 py-2 text-base font-medium text-slate-700 transition-all duration-300 ease-in-out hover:bg-slate-50"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {t(lang, "navbar_quiz", "Quiz")}
                 </Link>
                 <Link
                   href="/career-guidance"
-                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                  className="block rounded-xl px-3 py-2 text-base font-medium text-slate-700 transition-all duration-300 ease-in-out hover:bg-slate-50"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {t(lang, "navbar_career", "Career Guidance")}
                 </Link>
                 {authUser ? (
                   <>
-                    <div className="px-3 py-2 text-sm text-gray-600">
+                    <div className="px-3 py-2 text-sm text-slate-600">
                       Welcome, {authUser.name} ({roleLabel})
                     </div>
                     <Link
                       href="/dashboard"
-                      className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                      className="block rounded-xl px-3 py-2 text-base font-medium text-slate-700 transition-all duration-300 ease-in-out hover:bg-slate-50"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Dashboard
                     </Link>
                     <button
                       type="button"
-                      className="w-full text-left block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                      className="block w-full rounded-xl px-3 py-2 text-left text-base font-medium text-slate-700 transition-all duration-300 ease-in-out hover:bg-slate-50"
                       onClick={handleLogout}
                     >
                       Logout
@@ -306,14 +366,14 @@ export default function HomePage() {
                   <>
                     <Link
                       href="/login"
-                      className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                      className="block rounded-xl px-3 py-2 text-base font-medium text-slate-700 transition-all duration-300 ease-in-out hover:bg-slate-50"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Login
                     </Link>
                     <Link
                       href="/auth/register/student"
-                      className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+                      className="block rounded-xl px-3 py-2 text-base font-medium text-slate-700 transition-all duration-300 ease-in-out hover:bg-slate-50"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Sign Up
@@ -327,18 +387,27 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
+      <section
+        data-fade-in
+        className="reveal-section relative px-6 py-20 md:px-16 md:py-24"
+      >
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -left-24 top-8 h-64 w-64 rounded-full bg-indigo-200/60 blur-3xl opacity-30" />
+          <div className="absolute -right-20 top-16 h-72 w-72 rounded-full bg-purple-200/60 blur-3xl opacity-30" />
+        </div>
+        <div className="relative mx-auto max-w-5xl text-center">
+          <h2 className="mb-6 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl leading-tight">
+            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
             AI-Powered Career Guidance for Future Professionals
+            </span>
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed px-2">
+          <p className="mx-auto mb-8 max-w-2xl px-2 text-base leading-relaxed text-slate-600 sm:text-lg lg:text-xl">
             Discover your strengths, receive a personalized roadmap, analyze skill gaps, and build a structured path toward your ideal career.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-md sm:max-w-none mx-auto">
+          <div className="mx-auto flex max-w-md flex-col justify-center gap-3 sm:max-w-none sm:flex-row sm:gap-4">
             <Button
               size="lg"
-              className="w-full sm:w-auto min-h-[44px] text-sm sm:text-base font-semibold"
+              className="min-h-[44px] w-full rounded-full bg-indigo-600 px-8 py-3 text-sm font-semibold text-white shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-indigo-700 hover:shadow-lg sm:w-auto sm:text-base"
               onClick={handleStartLearning}
             >
               Start Career Assessment
@@ -347,7 +416,7 @@ export default function HomePage() {
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full sm:w-auto bg-transparent min-h-[44px] text-sm sm:text-base font-semibold"
+                className="min-h-[44px] w-full rounded-full border border-indigo-600 bg-white px-8 py-3 text-sm font-semibold text-indigo-600 shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-slate-50 hover:shadow-lg sm:w-auto sm:text-base"
               >
                 Explore Career Roadmap
               </Button>
@@ -357,13 +426,16 @@ export default function HomePage() {
       </section>
 
       {/* Access Methods */}
-      <section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-gray-900 mb-8 sm:mb-12">
+      <section
+        data-fade-in
+        className="reveal-section bg-white px-6 py-20 md:px-16"
+      >
+        <div className="mx-auto max-w-6xl">
+          <h3 className="mb-12 text-center text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
             How It Works
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <Card className="text-center hover:shadow-lg transition-shadow duration-300">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <Card className="text-center rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:shadow-xl">
               <CardHeader className="pb-4">
                 <BookOpen className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600 mx-auto mb-3 sm:mb-4" />
                 <CardTitle className="text-lg sm:text-xl">
@@ -371,13 +443,13 @@ export default function HomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <CardDescription className="text-sm sm:text-base leading-relaxed">
+                <CardDescription className="text-sm sm:text-base leading-relaxed text-slate-600">
                   Participate in a structured AI interview to uncover your strengths and career interests.
                 </CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-lg transition-shadow duration-300">
+            <Card className="text-center rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:shadow-xl">
               <CardHeader className="pb-4">
                 <MessageSquare className="h-10 w-10 sm:h-12 sm:w-12 text-green-600 mx-auto mb-3 sm:mb-4" />
                 <CardTitle className="text-lg sm:text-xl">
@@ -385,13 +457,13 @@ export default function HomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <CardDescription className="text-sm sm:text-base leading-relaxed">
+                <CardDescription className="text-sm sm:text-base leading-relaxed text-slate-600">
                   Receive a clear step-by-step roadmap aligned with your goals and skill level.
                 </CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-lg transition-shadow duration-300">
+            <Card className="text-center rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:shadow-xl">
               <CardHeader className="pb-4">
                 <Phone className="h-10 w-10 sm:h-12 sm:w-12 text-purple-600 mx-auto mb-3 sm:mb-4" />
                 <CardTitle className="text-lg sm:text-xl">
@@ -399,13 +471,13 @@ export default function HomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <CardDescription className="text-sm sm:text-base leading-relaxed">
+                <CardDescription className="text-sm sm:text-base leading-relaxed text-slate-600">
                   Identify missing skills and measure your readiness for your target role.
                 </CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-lg transition-shadow duration-300">
+            <Card className="text-center rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:shadow-xl sm:col-span-2 lg:col-span-1">
               <CardHeader className="pb-4">
                 <MapPin className="h-10 w-10 sm:h-12 sm:w-12 text-orange-600 mx-auto mb-3 sm:mb-4" />
                 <CardTitle className="text-lg sm:text-xl">
@@ -413,7 +485,7 @@ export default function HomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <CardDescription className="text-sm sm:text-base leading-relaxed">
+                <CardDescription className="text-sm sm:text-base leading-relaxed text-slate-600">
                   Get continuous AI-powered guidance for career growth and interview preparation.
                 </CardDescription>
               </CardContent>
@@ -423,49 +495,52 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center text-gray-900 mb-8 sm:mb-12">
+      <section
+        data-fade-in
+        className="reveal-section px-6 py-20 md:px-16"
+      >
+        <div className="mx-auto max-w-6xl">
+          <h3 className="mb-12 text-center text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
             {t(lang, "features_title")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <div className="flex items-start space-x-3 sm:space-x-4 p-4 sm:p-0">
+            <div className="flex items-start space-x-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:shadow-xl sm:space-x-4">
               <div className="bg-blue-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
                 <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
               <div className="min-w-0">
-                <h4 className="font-semibold text-gray-900 mb-2 text-base sm:text-lg">
+                <h4 className="mb-2 text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
                   Career Persona Identification
                 </h4>
-                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+                <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
                   Build a data-driven profile that maps your strengths and interests to the right career direction, while supporting reverse career planning.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-3 sm:space-x-4 p-4 sm:p-0">
+            <div className="flex items-start space-x-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:shadow-xl sm:space-x-4">
               <div className="bg-green-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
                 <Users className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
               <div className="min-w-0">
-                <h4 className="font-semibold text-gray-900 mb-2 text-base sm:text-lg">
+                <h4 className="mb-2 text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
                   Embedding-Based Skill Gap Analysis
                 </h4>
-                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+                <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
                   Use semantic matching to compare your profile with role requirements and get learn-to-earn recommendations.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-3 sm:space-x-4 p-4 sm:p-0 md:col-span-2 lg:col-span-1">
+            <div className="flex items-start space-x-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:shadow-xl sm:space-x-4 md:col-span-2 lg:col-span-1">
               <div className="bg-purple-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
                 <Award className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
               <div className="min-w-0">
-                <h4 className="font-semibold text-gray-900 mb-2 text-base sm:text-lg">
+                <h4 className="mb-2 text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
                   Continuous AI Coaching Support
                 </h4>
-                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+                <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
                   Receive ongoing AI guidance for next steps, interview preparation, and long-term career growth.
                 </p>
               </div>

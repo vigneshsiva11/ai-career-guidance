@@ -1,0 +1,43 @@
+{
+  "roleName": "Product Designer",
+  "roleOverview": "Product Designers bridge user needs and business goals to design end-to-end digital products from discovery to delivery.",
+  "requiredSkills": [
+    "Product thinking and problem framing",
+    "User flows and interaction design",
+    "Prototyping in Figma and usability testing",
+    "Design systems and accessibility",
+    "Cross-functional collaboration with PM and engineering"
+  ],
+  "beginnerStage": [
+    "Learn UX fundamentals, product thinking, and user journeys",
+    "Design simple app flows and clickable prototypes in Figma",
+    "Document process in portfolio case studies"
+  ],
+  "intermediateStage": [
+    "Run discovery interviews and validate assumptions",
+    "Design measurable improvements for activation and retention",
+    "Collaborate with developers during implementation and QA"
+  ],
+  "advancedStage": [
+    "Own product areas end-to-end with outcome metrics",
+    "Lead design strategy and experimentation roadmaps",
+    "Scale design systems and mentor team members"
+  ],
+  "certifications": [
+    "Google UX Design Certificate",
+    "NN/g UX Certification",
+    "Product School Product Design Courses"
+  ],
+  "realWorldProjects": [
+    "SaaS onboarding redesign with funnel improvements",
+    "Subscription management UX for reduced churn",
+    "Design system foundation and component governance"
+  ],
+  "careerOpportunities": [
+    "Product Designer",
+    "Senior Product Designer",
+    "UX/Product Design Lead",
+    "Design Manager"
+  ],
+  "salaryInsights": "Product design compensation increases with ownership scope, business impact, and ability to ship user-centric solutions at scale."
+}

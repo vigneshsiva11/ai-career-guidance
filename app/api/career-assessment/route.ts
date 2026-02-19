@@ -4,6 +4,7 @@ import { UserModel } from "@/server/models/User";
 import { AssessmentModel } from "@/server/models/Assessment";
 import { RoadmapModel } from "@/server/models/Roadmap";
 import { logUserActivity } from "@/server/utils/activityLogger";
+import { buildUnsupportedRoadmap, getFixedRoadmapForRole } from "@/lib/fixed-roadmaps";
 
 type QAPair = { question: string; answer: string };
 type HistoryMessage = { role: "user" | "assistant" | "system"; content: string };
@@ -80,26 +81,6 @@ function normalizeQuestion(text: string) {
     .trim();
 }
 
-function detectCategory(careerInterest: string) {
-  const value = String(careerInterest || "").toLowerCase();
-  if (value.includes("cricket") || value.includes("sports") || value.includes("athlete")) {
-    return "sports";
-  }
-  if (
-    value.includes("developer") ||
-    value.includes("software") ||
-    value.includes("engineer") ||
-    value.includes("program") ||
-    value.includes("ai")
-  ) {
-    return "technology";
-  }
-  if (value.includes("business") || value.includes("entrepreneur") || value.includes("startup")) {
-    return "business";
-  }
-  return "general";
-}
-
 function generateNextQuestion(previousAnswer: string, step: number) {
   const answer = previousAnswer.toLowerCase();
 
@@ -142,7 +123,7 @@ function nextQuestionWithoutDuplicates(
 
   const alternates = [
     "What is your current skill level in this career path?",
-    "How much time can you commit weekly to improve in this field?",
+    "How many hours per week can you commit to improve in this field?",
     "What milestone do you want to achieve in the next 12 months?",
     "What kind of guidance or resources do you need most right now?",
   ];
@@ -156,146 +137,42 @@ function nextQuestionWithoutDuplicates(
   return `What is your next most important goal for this career path (Step ${step})?`;
 }
 
-function generateRoadmap(category: string, answers: QAPair[]): RoadmapStages {
-  if (category === "sports") {
-    return {
-      beginner: [
-        "Join a recognized academy and follow a weekly training plan",
-        "Practice core fundamentals daily with a structured schedule",
-        "Build fitness, agility, endurance, and recovery habits",
-      ],
-      intermediate: [
-        "Participate in school/district tournaments regularly",
-        "Specialize in batting, bowling, or fielding with targeted drills",
-        "Work with a qualified coach and review match performance data",
-      ],
-      advanced: [
-        "Prepare for state and national selection trials",
-        "Use performance analytics to refine strategy and consistency",
-        "Compete in higher-level leagues and build professional readiness",
-      ],
-    };
-  }
-
-  if (category === "technology") {
-    return {
-      beginner: [
-        "Build fundamentals in core concepts and problem solving",
-        "Complete guided projects and document your learning",
-        "Practice coding consistently with weekly goals",
-      ],
-      intermediate: [
-        "Develop role-focused projects with increasing complexity",
-        "Improve system design and debugging skills",
-        "Collaborate on real-world tasks or open-source work",
-      ],
-      advanced: [
-        "Prepare for technical interviews and architecture discussions",
-        "Specialize in a high-impact domain such as AI or backend systems",
-        "Apply for role-specific opportunities with measurable achievements",
-      ],
-    };
-  }
-
-  if (category === "business") {
-    return {
-      beginner: [
-        "Learn core business, finance, and communication fundamentals",
-        "Study market problems and customer needs",
-        "Build discipline with small execution goals each week",
-      ],
-      intermediate: [
-        "Validate ideas through pilot projects and feedback loops",
-        "Develop sales, operations, and decision-making skills",
-        "Network with mentors, founders, and industry practitioners",
-      ],
-      advanced: [
-        "Create scalable business strategies and growth plans",
-        "Build leadership and team management capability",
-        "Pursue funding, partnerships, or high-responsibility roles",
-      ],
-    };
-  }
-
-  return {
-    beginner: [
-      "Build foundational knowledge and a consistent learning routine",
-      "Identify your strongest skills and close basic gaps",
-      "Gain early practical exposure through guided practice",
-    ],
-    intermediate: [
-      "Work on progressively challenging real-world tasks",
-      "Improve communication, collaboration, and execution quality",
-      "Track milestones and adjust your growth plan regularly",
-    ],
-    advanced: [
-      "Prepare for competitive opportunities in your chosen field",
-      "Develop specialization and measurable outcomes",
-      "Build long-term growth strategy with mentorship and feedback",
-    ],
-  };
-}
-
 function generateFinalAssessment(answers: QAPair[]) {
   const careerInterest = String(answers[0]?.answer || "Career Path Explorer").trim();
-  const category = detectCategory(careerInterest);
-
-  let strengthProfile =
-    "You show clear motivation to build your career through structured, consistent progress.";
-  let careerPersona = "Focused Growth Learner";
-
-  if (category === "sports") {
-    strengthProfile =
-      "You demonstrate athletic focus, discipline, and performance-driven intent for competitive growth.";
-    careerPersona = "Competitive Athlete";
-  } else if (category === "technology") {
-    strengthProfile =
-      "You show strong analytical thinking and practical curiosity to build technical problem-solving skills.";
-    careerPersona = "Technical Builder";
-  } else if (category === "business") {
-    strengthProfile =
-      "You show initiative, opportunity awareness, and decision-making potential for business-oriented roles.";
-    careerPersona = "Growth-Oriented Strategist";
+  const fixed = getFixedRoadmapForRole(careerInterest);
+  if (fixed) {
+    return {
+      strengthProfile: fixed.strengthProfile,
+      careerPersona: fixed.careerPersona,
+      recommendedCareer: fixed.canonicalRole,
+      roadmap: fixed.roadmap,
+      estimatedTimeline: fixed.estimatedTimeline,
+      toolsToLearn: fixed.toolsToLearn,
+      certifications: fixed.certifications,
+      realWorldProjects: fixed.realWorldProjects,
+      portfolioRequirements: fixed.portfolioRequirements,
+      interviewPreparationTopics: fixed.interviewPreparationTopics,
+      requiredTechnicalSkills: fixed.requiredTechnicalSkills || [],
+      requiredSoftSkills: fixed.requiredSoftSkills || [],
+      internshipStrategy: fixed.internshipStrategy || [],
+      freelancingStrategy: fixed.freelancingStrategy || [],
+      salaryInsight: fixed.salaryInsight || fixed.salaryRange || "",
+      jobPlatformsToApply: fixed.jobPlatformsToApply,
+      resumeTips: fixed.resumeTips,
+      jobReadyChecklist:
+        fixed.jobReadyChecklist && fixed.jobReadyChecklist.length > 0
+          ? fixed.jobReadyChecklist
+          : [
+              "Complete beginner, intermediate, and advanced roadmap stages",
+              "Build portfolio-ready projects with measurable outcomes",
+              "Prepare resume and apply consistently on job platforms",
+            ],
+      skillGapPreview: fixed.skillGapPreview,
+      source: "fixed_skill_catalog",
+    };
   }
 
-  const roadmap = generateRoadmap(category, answers);
-
-  const skillGapPreview =
-    category === "sports"
-      ? [
-          { skill: "Match Experience", gap: 60 },
-          { skill: "Physical Conditioning", gap: 50 },
-          { skill: "Role Specialization", gap: 55 },
-          { skill: "Performance Analytics", gap: 65 },
-        ]
-      : category === "technology"
-      ? [
-          { skill: "Problem Solving", gap: 50 },
-          { skill: "Project Depth", gap: 60 },
-          { skill: "System Design", gap: 65 },
-          { skill: "Interview Readiness", gap: 55 },
-        ]
-      : category === "business"
-      ? [
-          { skill: "Market Validation", gap: 55 },
-          { skill: "Financial Planning", gap: 60 },
-          { skill: "Sales & Negotiation", gap: 50 },
-          { skill: "Execution Consistency", gap: 58 },
-        ]
-      : [
-          { skill: "Domain Expertise", gap: 55 },
-          { skill: "Practical Exposure", gap: 60 },
-          { skill: "Communication", gap: 48 },
-          { skill: "Execution Discipline", gap: 52 },
-        ];
-
-  return {
-    strengthProfile,
-    careerPersona,
-    recommendedCareer: careerInterest,
-    roadmap,
-    skillGapPreview,
-  };
+  return buildUnsupportedRoadmap(careerInterest);
 }
 
 async function completeAssessment(params: {
@@ -323,7 +200,44 @@ async function completeAssessment(params: {
     {
       userId: user._id,
       careerTitle: generated.recommendedCareer,
+      targetRole: generated.recommendedCareer,
       stages: generated.roadmap,
+      stageDetails: [
+        {
+          stageName: "Beginner",
+          skills: generated.roadmap.beginner,
+          projects: [],
+          duration: "0-3 months",
+        },
+        {
+          stageName: "Intermediate",
+          skills: generated.roadmap.intermediate,
+          projects: [],
+          duration: "3-12 months",
+        },
+        {
+          stageName: "Advanced",
+          skills: generated.roadmap.advanced,
+          projects: [],
+          duration: "12+ months",
+        },
+      ],
+      readinessScore: 50,
+      estimatedTimeline: generated.estimatedTimeline || "",
+      toolsToLearn: generated.toolsToLearn || [],
+      certifications: generated.certifications || [],
+      realWorldProjects: generated.realWorldProjects || [],
+      portfolioRequirements: generated.portfolioRequirements || [],
+      interviewPreparationTopics: generated.interviewPreparationTopics || [],
+      requiredTechnicalSkills: generated.requiredTechnicalSkills || [],
+      requiredSoftSkills: generated.requiredSoftSkills || [],
+      internshipStrategy: generated.internshipStrategy || [],
+      freelancingStrategy: generated.freelancingStrategy || [],
+      salaryInsight: generated.salaryInsight || "",
+      jobPlatformsToApply: generated.jobPlatformsToApply || [],
+      resumeTips: generated.resumeTips || [],
+      jobReadyChecklist: generated.jobReadyChecklist || [],
+      source: generated.source || "fixed_skill_catalog",
       generatedAt: new Date(),
     },
     { upsert: true, new: true, setDefaultsOnInsert: true }
@@ -334,7 +248,8 @@ async function completeAssessment(params: {
   await logUserActivity(user._id.toString(), "ROADMAP_GENERATED", {
     persona: generated.careerPersona,
     suggestedCareer: generated.recommendedCareer,
-    mode: "rule_based",
+    mode: "fixed_catalog",
+    source: generated.source || "fixed_skill_catalog",
   });
 
   return {
@@ -346,7 +261,22 @@ async function completeAssessment(params: {
       careerPersona: generated.careerPersona,
       suggestedCareerPath: generated.recommendedCareer,
       roadmap: generated.roadmap,
+      estimatedTimeline: generated.estimatedTimeline || "",
+      toolsToLearn: generated.toolsToLearn || [],
+      certifications: generated.certifications || [],
+      realWorldProjects: generated.realWorldProjects || [],
+      portfolioRequirements: generated.portfolioRequirements || [],
+      interviewPreparationTopics: generated.interviewPreparationTopics || [],
+      requiredTechnicalSkills: generated.requiredTechnicalSkills || [],
+      requiredSoftSkills: generated.requiredSoftSkills || [],
+      internshipStrategy: generated.internshipStrategy || [],
+      freelancingStrategy: generated.freelancingStrategy || [],
+      salaryInsight: generated.salaryInsight || "",
+      jobPlatformsToApply: generated.jobPlatformsToApply || [],
+      resumeTips: generated.resumeTips || [],
+      jobReadyChecklist: generated.jobReadyChecklist || [],
       skillGapPreview: generated.skillGapPreview,
+      source: generated.source || "fixed_skill_catalog",
     },
   };
 }
@@ -520,7 +450,24 @@ export async function GET(request: NextRequest) {
           careerPersona: assessment.persona,
           suggestedCareerPath: assessment.suggestedCareer,
           roadmap: roadmap.stages,
+          estimatedTimeline: String((roadmap as any).estimatedTimeline || ""),
+          toolsToLearn: (roadmap as any).toolsToLearn || [],
+          certifications: (roadmap as any).certifications || [],
+          realWorldProjects: (roadmap as any).realWorldProjects || [],
+          portfolioRequirements: (roadmap as any).portfolioRequirements || [],
+          interviewPreparationTopics:
+            (roadmap as any).interviewPreparationTopics || [],
+          requiredTechnicalSkills:
+            (roadmap as any).requiredTechnicalSkills || [],
+          requiredSoftSkills: (roadmap as any).requiredSoftSkills || [],
+          internshipStrategy: (roadmap as any).internshipStrategy || [],
+          freelancingStrategy: (roadmap as any).freelancingStrategy || [],
+          salaryInsight: String((roadmap as any).salaryInsight || ""),
+          jobPlatformsToApply: (roadmap as any).jobPlatformsToApply || [],
+          resumeTips: (roadmap as any).resumeTips || [],
+          jobReadyChecklist: (roadmap as any).jobReadyChecklist || [],
           skillGapPreview: assessment.skillGapPreview || [],
+          source: String((roadmap as any).source || "rule_based_assessment"),
         },
         updatedAt: roadmap.generatedAt || assessment.createdAt,
       },

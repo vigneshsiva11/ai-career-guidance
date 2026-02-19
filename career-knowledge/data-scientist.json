@@ -1,0 +1,44 @@
+{
+  "roleName": "Data Scientist",
+  "roleOverview": "Data Scientists analyze complex data to generate insights, build predictive models, and support business decisions through statistics and machine learning.",
+  "requiredSkills": [
+    "Python, SQL, and data wrangling",
+    "Statistics, probability, and experiment design",
+    "Machine learning model development and evaluation",
+    "Data visualization and storytelling",
+    "Model deployment and monitoring fundamentals"
+  ],
+  "beginnerStage": [
+    "Learn Python for data analysis and SQL querying",
+    "Practice exploratory analysis on public datasets",
+    "Master core statistics and hypothesis testing"
+  ],
+  "intermediateStage": [
+    "Build supervised and unsupervised ML models",
+    "Develop dashboards and communicate business insights",
+    "Participate in domain projects like churn prediction or demand forecasting"
+  ],
+  "advancedStage": [
+    "Design robust ML pipelines and model governance",
+    "Lead experimentation strategy and causal inference work",
+    "Collaborate with engineering for production-grade model serving"
+  ],
+  "certifications": [
+    "Google Advanced Data Analytics Certificate",
+    "IBM Data Science Professional Certificate",
+    "Microsoft Certified: Azure Data Scientist Associate"
+  ],
+  "realWorldProjects": [
+    "Customer churn prediction and retention recommendations",
+    "Fraud detection model with feature engineering",
+    "Sales forecasting pipeline with seasonality modeling"
+  ],
+  "careerOpportunities": [
+    "Data Scientist",
+    "Machine Learning Engineer",
+    "Applied Scientist",
+    "Analytics Scientist",
+    "Decision Scientist"
+  ],
+  "salaryInsights": "Data science salaries increase with model deployment experience, business context depth, and demonstrated ROI from analytical initiatives."
+}

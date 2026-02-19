@@ -1,0 +1,44 @@
+{
+  "roleName": "Digital Marketer",
+  "roleOverview": "Digital Marketers drive brand growth using SEO, paid campaigns, content strategy, social media, and analytics across digital channels.",
+  "requiredSkills": [
+    "SEO and keyword research",
+    "Paid ads across search and social platforms",
+    "Content strategy and copywriting",
+    "Marketing analytics and attribution",
+    "Campaign planning and conversion optimization"
+  ],
+  "beginnerStage": [
+    "Learn digital marketing fundamentals and channel basics",
+    "Run small campaigns and track CTR, CPC, and conversion rates",
+    "Create content calendars and execute platform-specific posts"
+  ],
+  "intermediateStage": [
+    "Manage multi-channel campaigns with segmented audiences",
+    "Build funnel analysis and optimize landing pages",
+    "Use analytics tools for reporting and performance improvements"
+  ],
+  "advancedStage": [
+    "Lead growth strategy and budget allocation across channels",
+    "Design experimentation frameworks for CAC and LTV optimization",
+    "Scale brand, performance, and lifecycle marketing programs"
+  ],
+  "certifications": [
+    "Google Ads Certification",
+    "Google Analytics Certification",
+    "Meta Blueprint Certification"
+  ],
+  "realWorldProjects": [
+    "Lead generation funnel optimization for B2B SaaS",
+    "E-commerce ROAS improvement campaign",
+    "Content + SEO strategy for organic traffic growth"
+  ],
+  "careerOpportunities": [
+    "Digital Marketing Specialist",
+    "Performance Marketer",
+    "SEO Strategist",
+    "Growth Marketing Manager",
+    "Marketing Analytics Lead"
+  ],
+  "salaryInsights": "Compensation scales with revenue impact, campaign efficiency, and ability to optimize acquisition and retention outcomes."
+}

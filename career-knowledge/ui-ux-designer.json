@@ -1,0 +1,44 @@
+{
+  "roleName": "UI/UX Designer",
+  "roleOverview": "UI/UX Designers create intuitive, accessible, and visually effective digital experiences by combining user research, interaction design, and interface craft.",
+  "requiredSkills": [
+    "User research and usability testing",
+    "Wireframing and prototyping",
+    "Design systems and component libraries",
+    "Visual hierarchy, typography, and accessibility",
+    "Tools like Figma and collaboration with developers"
+  ],
+  "beginnerStage": [
+    "Study UX principles, design thinking, and human-centered design",
+    "Create wireframes and high-fidelity mockups for simple products",
+    "Run basic user interviews and summarize findings"
+  ],
+  "intermediateStage": [
+    "Build end-to-end case studies with research, flows, and prototypes",
+    "Design responsive UI patterns and reusable components",
+    "Work with product and engineering teams on real release cycles"
+  ],
+  "advancedStage": [
+    "Lead UX strategy across multiple product surfaces",
+    "Define and scale design systems for consistency and speed",
+    "Drive experimentation and KPI-focused experience improvements"
+  ],
+  "certifications": [
+    "Google UX Design Certificate",
+    "Nielsen Norman Group UX Certification",
+    "Interaction Design Foundation UX Courses"
+  ],
+  "realWorldProjects": [
+    "Mobile banking app onboarding redesign",
+    "SaaS dashboard information architecture overhaul",
+    "E-commerce checkout flow optimization with A/B testing"
+  ],
+  "careerOpportunities": [
+    "UX Designer",
+    "Product Designer",
+    "UI Designer",
+    "Interaction Designer",
+    "Design Systems Designer"
+  ],
+  "salaryInsights": "Compensation grows with portfolio quality, domain expertise, and measurable impact on activation, retention, and conversion metrics."
+}

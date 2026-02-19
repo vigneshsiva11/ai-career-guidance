@@ -202,3 +202,25 @@
     cursor: pointer;
   }
 }
+
+@layer utilities {
+  .reveal-section {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal-section[data-reveal-state="pending"] {
+      opacity: 0;
+      transform: translateY(18px);
+      transition:
+        opacity 0.7s ease,
+        transform 0.7s ease;
+    }
+
+    .reveal-section[data-reveal-state="visible"] {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

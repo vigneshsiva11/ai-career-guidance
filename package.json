@@ -2,12 +2,19 @@
   "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20 <23"
+  },
   "scripts": {
+    "predev": "node scripts/check-node-version.js",
     "build": "next build",
-    "dev": "next dev",
+    "dev": "node scripts/dev-start.js",
+    "dev:raw": "next dev -p 3000",
+    "dev:safe": "node scripts/dev-start.js",
     "lint": "next lint",
     "start": "next start",
-    "ingest:rag": "tsx scripts/ingest-rag.ts"
+    "ingest:rag": "tsx scripts/ingest-rag.ts",
+    "ingest:career": "tsx scripts/ingest-career-data.ts"
   },
   "dependencies": {
     "@ai-sdk/groq": "latest",

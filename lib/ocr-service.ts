@@ -1,3 +1,4 @@
+import "server-only";
 // OCR Service for Classless - Handles image text extraction
 // Using Gemini AI for real OCR processing with fallback to enhanced mock results
 

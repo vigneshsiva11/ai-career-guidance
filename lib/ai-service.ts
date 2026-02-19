@@ -1,3 +1,4 @@
+import "server-only";
 // AI Service for Classless - Now using Google Gemini AI
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Question } from "./types";

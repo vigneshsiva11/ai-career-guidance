@@ -1,3 +1,4 @@
+import "server-only";
 // Image Generation Service for Classless - Using Google Gemini AI
 import { GoogleGenerativeAI } from "@google/generative-ai";
 

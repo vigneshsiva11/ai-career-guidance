@@ -18,6 +18,7 @@ import {
   Brain,
   Briefcase,
   ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 import type { User, Question } from "@/lib/types";
 
@@ -122,7 +123,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
           <BookOpen className="h-12 w-12 text-blue-600 mx-auto mb-4 animate-spin" />
           <p className="text-gray-600">Loading your dashboard...</p>
@@ -134,17 +135,22 @@ export default function DashboardPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-6 md:px-16">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+            <Link href="/" className="flex items-center space-x-2 rounded-full px-2 py-1 transition-all duration-300 ease-in-out hover:bg-white/80">
               <BookOpen className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Classless</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Classless</h1>
             </Link>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {user.name}</span>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">Welcome, {user.name}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="rounded-full border-slate-300 bg-white shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-slate-50 hover:shadow-lg"
+              >
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
               </Button>
@@ -153,12 +159,12 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+      <div className="mx-auto max-w-7xl space-y-12 px-6 py-10 md:px-16">
+        <div className="mb-8 space-y-4">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900">
             {user.user_type === "student" ? "Student Dashboard" : "Teacher Dashboard"}
           </h2>
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
             <div className="flex items-center space-x-1">
               <Phone className="h-4 w-4" />
               <span>{user.phone_number}</span>
@@ -174,15 +180,24 @@ export default function DashboardPage() {
         </div>
 
         {user.user_type === "student" && assessmentCompleted && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Career Assessment Completed</CardTitle>
-              <CardDescription>
+          <Card className="mb-10 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+            <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
+            <CardHeader className="space-y-3">
+              <CardTitle className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                </span>
+                Career Assessment Completed
+              </CardTitle>
+              <CardDescription className="text-slate-600">
                 Your personalized strengths and roadmap are ready.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => router.push("/roadmap")}>
+                <Button
+                  onClick={() => router.push("/roadmap")}
+                  className="rounded-full bg-indigo-600 text-white shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-indigo-700 hover:shadow-lg"
+                >
                 See Your Strength & Roadmap
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -190,32 +205,39 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <section className="relative mb-10 overflow-hidden rounded-3xl border border-white/50 bg-white/60 p-6 shadow-xl backdrop-blur-md md:p-8">
+          <div className="absolute -right-14 -top-14 h-40 w-40 rounded-full bg-indigo-200/30 blur-3xl" />
+          <div className="absolute -left-10 bottom-0 h-36 w-36 rounded-full bg-blue-200/30 blur-3xl" />
+          <div className="relative grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           <Link href="/ask">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl cursor-pointer">
               <CardHeader className="pb-3">
                 <div className="flex items-center space-x-2">
-                  <Plus className="h-5 w-5 text-blue-600" />
-                  <CardTitle className="text-lg">Ask Question</CardTitle>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100">
+                    <Plus className="h-5 w-5 text-blue-600" />
+                  </span>
+                  <CardTitle className="text-lg font-bold tracking-tight text-slate-900">Ask Question</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <CardDescription>Get instant AI-powered answers to your questions</CardDescription>
+                <CardDescription className="text-slate-600">Get instant AI-powered answers to your questions</CardDescription>
               </CardContent>
             </Card>
           </Link>
 
           {user.user_type === "student" && (
             <Link href="/ask-teacher">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl cursor-pointer">
                 <CardHeader className="pb-3">
                   <div className="flex items-center space-x-2">
-                    <MessageSquare className="h-5 w-5 text-blue-600" />
-                    <CardTitle className="text-lg">Ask Teacher</CardTitle>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100">
+                      <MessageSquare className="h-5 w-5 text-blue-600" />
+                    </span>
+                    <CardTitle className="text-lg font-bold tracking-tight text-slate-900">Ask Teacher</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription>Send a question to your teacher and view their replies</CardDescription>
+                  <CardDescription className="text-slate-600">Send a question to your teacher and view their replies</CardDescription>
                 </CardContent>
               </Card>
             </Link>
@@ -223,15 +245,17 @@ export default function DashboardPage() {
 
           {user.user_type === "teacher" && (
             <Link href="/teacher/pending">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl cursor-pointer">
                 <CardHeader className="pb-3">
                   <div className="flex items-center space-x-2">
-                    <Users className="h-5 w-5 text-green-600" />
-                    <CardTitle className="text-lg">Answer Questions</CardTitle>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100">
+                      <Users className="h-5 w-5 text-green-600" />
+                    </span>
+                    <CardTitle className="text-lg font-bold tracking-tight text-slate-900">Answer Questions</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription>Help students by answering their questions</CardDescription>
+                  <CardDescription className="text-slate-600">Help students by answering their questions</CardDescription>
                 </CardContent>
               </Card>
             </Link>
@@ -239,15 +263,17 @@ export default function DashboardPage() {
 
           {user.user_type === "student" && (
             <Link href="/quiz/progress">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl cursor-pointer">
                 <CardHeader className="pb-3">
                   <div className="flex items-center space-x-2">
-                    <Brain className="h-5 w-5 text-indigo-600" />
-                    <CardTitle className="text-lg">My Quiz Progress</CardTitle>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-100">
+                      <Brain className="h-5 w-5 text-purple-600" />
+                    </span>
+                    <CardTitle className="text-lg font-bold tracking-tight text-slate-900">My Quiz Progress</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription>View your attended quizzes, scores, and history</CardDescription>
+                  <CardDescription className="text-slate-600">View your attended quizzes, scores, and history</CardDescription>
                 </CardContent>
               </Card>
             </Link>
@@ -255,77 +281,86 @@ export default function DashboardPage() {
 
           {user.user_type === "student" && (
             <Link href="/scholarships">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl cursor-pointer">
                 <CardHeader className="pb-3">
                   <div className="flex items-center space-x-2">
-                    <Award className="h-5 w-5 text-purple-600" />
-                    <CardTitle className="text-lg">Scholarships</CardTitle>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-pink-100">
+                      <Award className="h-5 w-5 text-pink-600" />
+                    </span>
+                    <CardTitle className="text-lg font-bold tracking-tight text-slate-900">Scholarships</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription>Discover scholarships and government schemes</CardDescription>
+                  <CardDescription className="text-slate-600">Discover scholarships and government schemes</CardDescription>
                 </CardContent>
               </Card>
             </Link>
           )}
 
           <Link href="/stations">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl cursor-pointer">
               <CardHeader className="pb-3">
                 <div className="flex items-center space-x-2">
-                  <MapPin className="h-5 w-5 text-orange-600" />
-                  <CardTitle className="text-lg">Learning Stations</CardTitle>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100">
+                    <MapPin className="h-5 w-5 text-amber-600" />
+                  </span>
+                  <CardTitle className="text-lg font-bold tracking-tight text-slate-900">Learning Stations</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <CardDescription>Find community learning stations near you</CardDescription>
+                <CardDescription className="text-slate-600">Find community learning stations near you</CardDescription>
               </CardContent>
             </Card>
           </Link>
 
           {user.user_type === "teacher" && (
             <Link href="/teacher/quiz-progress">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl cursor-pointer">
                 <CardHeader className="pb-3">
                   <div className="flex items-center space-x-2">
-                    <Brain className="h-5 w-5 text-indigo-600" />
-                    <CardTitle className="text-lg">Student Quiz Progress</CardTitle>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-100">
+                      <Brain className="h-5 w-5 text-purple-600" />
+                    </span>
+                    <CardTitle className="text-lg font-bold tracking-tight text-slate-900">Student Quiz Progress</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription>View and track student quiz performance and progress</CardDescription>
+                  <CardDescription className="text-slate-600">View and track student quiz performance and progress</CardDescription>
                 </CardContent>
               </Card>
             </Link>
           )}
 
           <Link href="/career-guidance">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl cursor-pointer">
               <CardHeader className="pb-3">
                 <div className="flex items-center space-x-2">
-                  <Briefcase className="h-5 w-5 text-emerald-600" />
-                  <CardTitle className="text-lg">Career Guidance</CardTitle>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100">
+                    <Briefcase className="h-5 w-5 text-emerald-600" />
+                  </span>
+                  <CardTitle className="text-lg font-bold tracking-tight text-slate-900">Career Guidance</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <CardDescription>Plan your future with career guidance tools</CardDescription>
+                <CardDescription className="text-slate-600">Plan your future with career guidance tools</CardDescription>
               </CardContent>
             </Card>
           </Link>
-        </div>
+          </div>
+        </section>
 
         {user.user_type === "student" && recentActivities.length > 0 && (
-          <Card className="mb-8">
+          <Card className="mb-8 rounded-2xl border border-slate-200 bg-white shadow-lg">
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your latest tracked actions</CardDescription>
+              <CardTitle className="font-bold tracking-tight text-slate-900">Recent Activity</CardTitle>
+              <CardDescription className="text-slate-600">Your latest tracked actions</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {recentActivities.map((activity, index) => (
-                  <div key={activity._id || index} className="border rounded-lg p-3">
-                    <p className="font-medium text-gray-900 text-sm">{activity.activityType}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                  <div key={activity._id || index} className="rounded-xl border border-slate-200 bg-white p-3">
+                    <p className="text-sm font-medium text-slate-900">{activity.activityType}</p>
+                    <p className="mt-1 text-xs text-slate-500">
                       {new Date(activity.timestamp).toLocaleString()}
                     </p>
                   </div>
@@ -335,13 +370,13 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
+        <Card className="rounded-2xl border border-slate-200 bg-white shadow-lg">
+          <CardHeader className="border-t border-slate-200 pt-8">
+            <CardTitle className="flex items-center space-x-2 font-bold tracking-tight text-slate-900">
               <MessageSquare className="h-5 w-5" />
               <span>Your Recent Questions</span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-slate-600">
               {user.user_type === "student"
                 ? "Questions you've asked recently"
                 : "Questions you've answered recently"}
@@ -351,7 +386,7 @@ export default function DashboardPage() {
             {questions.length === 0 ? (
               <div className="text-center py-8">
                 <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">
+                <p className="mb-4 text-slate-600">
                   {user.user_type === "student"
                     ? "You haven't asked any questions yet."
                     : "No questions to show."}
@@ -367,12 +402,12 @@ export default function DashboardPage() {
                 {questions.map((question) => (
                   <div
                     key={question.id}
-                    className="border rounded-lg p-4"
+                    className="rounded-xl border border-slate-200 bg-white p-4 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg"
                     onClick={() => navigateToAskTeacherIfTeacherQuestion(question.id)}
                     style={{ cursor: "pointer" }}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <p className="font-medium text-gray-900 line-clamp-2">{question.question_text}</p>
+                      <p className="line-clamp-2 font-medium text-slate-900">{question.question_text}</p>
                       <Badge
                         variant={
                           question.status === "answered"
@@ -385,7 +420,7 @@ export default function DashboardPage() {
                         {question.status}
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-between text-sm text-gray-500">
+                    <div className="flex items-center justify-between text-sm text-slate-500">
                       <span>{question.language.toUpperCase()}</span>
                       <span>{new Date(question.created_at).toLocaleDateString()}</span>
                     </div>
@@ -399,4 +434,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

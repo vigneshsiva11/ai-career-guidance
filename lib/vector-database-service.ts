@@ -1,4 +1,5 @@
 // Vector Database Service for Educational RAG System
+import "server-only";
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
 

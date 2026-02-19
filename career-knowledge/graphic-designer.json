@@ -1,0 +1,42 @@
+{
+  "roleName": "Graphic Designer",
+  "roleOverview": "Graphic Designers communicate ideas visually across digital and print media using branding, typography, and composition.",
+  "requiredSkills": [
+    "Visual hierarchy and typography",
+    "Brand identity design",
+    "Adobe Photoshop and Illustrator",
+    "Layout and composition principles",
+    "Client communication and feedback iteration"
+  ],
+  "beginnerStage": [
+    "Learn design fundamentals and color theory",
+    "Create posters, social assets, and logo exercises",
+    "Build proficiency in Photoshop and Illustrator basics"
+  ],
+  "intermediateStage": [
+    "Develop brand kits and campaign creatives",
+    "Build a portfolio with case studies and rationale",
+    "Work on freelance or internship projects with revisions"
+  ],
+  "advancedStage": [
+    "Lead visual direction for multi-channel campaigns",
+    "Own brand consistency across teams and assets",
+    "Mentor junior designers and improve design process quality"
+  ],
+  "certifications": [
+    "Adobe Certified Professional",
+    "CalArts Graphic Design Specialization"
+  ],
+  "realWorldProjects": [
+    "Brand identity system for startup launch",
+    "Social media campaign kit with templates",
+    "Event marketing collateral across print and digital"
+  ],
+  "careerOpportunities": [
+    "Graphic Designer",
+    "Brand Designer",
+    "Visual Designer",
+    "Marketing Designer"
+  ],
+  "salaryInsights": "Compensation improves with portfolio quality, brand impact, and ability to deliver high-volume production with consistent quality."
+}

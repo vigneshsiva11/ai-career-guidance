@@ -1,0 +1,44 @@
+{
+  "roleName": "Cricketer",
+  "roleOverview": "Professional cricketers build performance through technical skill, physical conditioning, match intelligence, and consistent competitive exposure.",
+  "requiredSkills": [
+    "Batting, bowling, and fielding fundamentals",
+    "Strength, agility, endurance, and recovery routines",
+    "Game awareness and match strategy",
+    "Mental resilience and pressure management",
+    "Performance analysis and coaching feedback integration"
+  ],
+  "beginnerStage": [
+    "Enroll in structured academy coaching and follow weekly drills",
+    "Build fitness base with mobility, endurance, and strength training",
+    "Play regular local and school matches to apply fundamentals"
+  ],
+  "intermediateStage": [
+    "Specialize in role focus such as opening batter, spinner, or pace bowler",
+    "Compete at district and state-level tournaments",
+    "Use video analysis and coaching feedback for skill refinement"
+  ],
+  "advancedStage": [
+    "Prepare for high-performance camps and national trials",
+    "Develop elite match consistency and tactical adaptability",
+    "Build professional pathway through leagues and representative teams"
+  ],
+  "certifications": [
+    "State Cricket Association Coaching Camps",
+    "Sports Nutrition and Conditioning Programs",
+    "Biomechanics and Performance Analysis Workshops"
+  ],
+  "realWorldProjects": [
+    "Season-long performance tracking dashboard",
+    "Role-specific training cycle with measurable KPIs",
+    "Tournament readiness plan with recovery and strategy blocks"
+  ],
+  "careerOpportunities": [
+    "Professional Cricketer",
+    "Domestic League Player",
+    "Cricket Coach",
+    "Performance Analyst",
+    "Cricket Academy Trainer"
+  ],
+  "salaryInsights": "Income varies by league level, match fees, contracts, sponsorships, and long-term performance consistency."
+}

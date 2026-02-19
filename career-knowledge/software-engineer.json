@@ -1,0 +1,44 @@
+{
+  "roleName": "Software Engineer",
+  "roleOverview": "Software Engineers design, build, test, and maintain applications used by businesses and consumers across web, mobile, and cloud platforms.",
+  "requiredSkills": [
+    "Data structures and algorithms",
+    "JavaScript/TypeScript and one backend language",
+    "Git and collaborative development workflows",
+    "Database design and API development",
+    "Testing, debugging, and deployment basics"
+  ],
+  "beginnerStage": [
+    "Learn programming fundamentals and one language deeply",
+    "Build small projects like to-do app, API service, and portfolio site",
+    "Practice problem solving with coding exercises"
+  ],
+  "intermediateStage": [
+    "Develop full-stack projects with authentication and database integration",
+    "Learn system design basics, CI/CD, and cloud deployment",
+    "Contribute to open source or internships for production experience"
+  ],
+  "advancedStage": [
+    "Specialize in backend, frontend, mobile, or AI engineering",
+    "Lead architecture decisions and performance optimization initiatives",
+    "Mentor junior developers and drive engineering best practices"
+  ],
+  "certifications": [
+    "AWS Certified Developer - Associate",
+    "Google Associate Cloud Engineer",
+    "Microsoft Azure Developer Associate"
+  ],
+  "realWorldProjects": [
+    "E-commerce platform with recommendation engine",
+    "Realtime collaboration tool with WebSocket support",
+    "Scalable REST/GraphQL API with caching and monitoring"
+  ],
+  "careerOpportunities": [
+    "Software Engineer",
+    "Full Stack Developer",
+    "Backend Engineer",
+    "Frontend Engineer",
+    "Site Reliability Engineer"
+  ],
+  "salaryInsights": "Entry-level software roles often start with competitive pay and scale significantly with strong system design and product impact."
+}
