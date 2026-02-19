@@ -1,152 +1,271 @@
-# 🌍 Classless – Inclusive AI Tutor for All
+# 🚀 AI Career Guidance System – Personalized Roadmap Generator
 
-> **Breaking barriers in education** – An AI-powered learning platform designed to reach every student, whether they have a smartphone, a feature phone, or no personal device at all.
-
----
-
-## 🚀 Problem Statement
-
-In India, millions of rural and low-income students are **left behind in the digital education revolution** because:
-
-- 📱 Limited or no access to smartphones (shared within families).
-- 🌐 Poor or no internet connectivity in villages.
-- 🗣️ Existing ed-tech apps prioritize English/urban users, ignoring local languages.
-- ❓ Students lack reliable after-school doubt-solving support.
-
-The result? A growing education gap between urban and rural learners.
+> An AI-powered adaptive career assessment platform that analyzes student interests, identifies strengths, and generates structured career roadmaps using intelligent decision logic and NLP techniques.
 
 ---
 
-## 💡 Solution – Classless
+## 📌 Problem Statement
 
-Classless is an **inclusive AI tutor** that ensures every student can learn, regardless of their access to technology.
+Many students struggle with:
 
-**Smartphone / Web App** – AI tutor with step-by-step explanations in local languages.
-**SMS Mode (Feature Phones)** – Students text questions, receive AI-powered answers via SMS.
-**IVR (Call-in Tutor)** – Students call a toll-free number, ask in their language, and get spoken answers.
-**Community Learning Stations** – Shared devices in schools or panchayat centers for group learning.
-
-Beyond tutoring, Classless also connects students to **scholarships, government schemes, and free learning resources**.
-
----
-
-## 🛠️ Implementation
-
-- **Offline-first React/React Native app** for reliable learning even with weak internet.
-- **Node.js + Express.js backend** with PostgreSQL for queries, users, and resource management.
-- **Multilingual AI/NLP** using Hugging Face & OpenAI for natural doubt-solving in regional languages.
-- **SMS & IVR Integration** via Twilio/Exotel APIs.
-- **OCR (Tesseract.js)** for scanning handwritten questions.
-- **Google Speech APIs** for speech-to-text and text-to-speech support in IVR.
+- ❓ Career confusion and lack of clarity  
+- 📉 Choosing careers based on trends instead of strengths  
+- 📚 No structured roadmap to achieve career goals  
+- 📊 No skill gap awareness  
+- 🧠 No personalized mentoring  
 
 ---
 
-## 🎯 Outcomes
+## 💡 Solution – AI Career Guidance System
 
-- 📚 Provided **affordable and accessible tutoring** to underserved students.
-- 🌐 Enabled **multi-channel learning** (App, SMS, IVR, shared stations).
-- 🗣️ Supported **local languages and dialects**, making learning culturally relevant.
-- 🤝 Bridged the education gap by ensuring **no student is left behind**.
+This platform provides:
+
+- 🎯 Adaptive Career Assessment (6-step structured interview)
+- 🧠 NLP-based career classification
+- 📊 Strength profile generation
+- 🛤️ Beginner → Intermediate → Advanced roadmap
+- 📉 Skill gap analysis
+- 🔐 Secure authentication (JWT + Google SSO)
+- 📦 MongoDB-based persistent user tracking
+- 📊 Activity logging & progress tracking
+
+The system dynamically generates roadmaps based on user responses and stores personalized results.
 
 ---
 
-## 🖥️ Tech Stack
+## 🏗️ System Architecture
 
-- **Frontend:** React.js, React Native (offline-first)
-- **Backend:** Node.js, Express.js
-- **Database:** PostgreSQL
-- **AI/NLP:** Hugging Face, OpenAI models
-- **OCR & Speech:** Tesseract.js, Google Speech-to-Text & Text-to-Speech
-- **SMS/IVR:** Twilio, Exotel APIs
+Frontend:
+- Next.js (App Router)
+- TypeScript
+- Responsive UI
+
+Backend:
+- Next.js API Routes (Serverless)
+- Node.js Runtime
+- REST API architecture
+
+Database:
+- MongoDB (Atlas)
+
+AI Layer:
+- Rule-based NLP classification
+- Optional Gemini LLM integration
+- Template-based roadmap engine
+- Adaptive question engine
+
+Authentication:
+- JWT (HTTP-only cookies)
+- Google OAuth 2.0 
+
+---
+
+## 🧠 Core Features
+
+### 1️⃣ Career Assessment Engine
+- Common first question for all users
+- Adaptive follow-up questions
+- Context-aware progression
+- No repeated questions
+- Stores answers in MongoDB
+
+---
+
+### 2️⃣ Career Classification
+System categorizes user interest into:
+
+- Sports
+- Technology
+- Business
+- Creative
+- Education
+- Government
+- General
+
+---
+
+### 3️⃣ Roadmap Generation
+Each career includes structured stages:
+
+Beginner Stage:
+- Foundation training
+- Basic skill development
+
+Intermediate Stage:
+- Real-world exposure
+- Advanced skill building
+
+Advanced Stage:
+- Professional preparation
+- Industry readiness
+
+---
+
+### 4️⃣ Strength Profile
+Generates:
+- Strength summary
+- Career persona
+- Suggested career title
+- Motivation style
+
+---
+
+### 5️⃣ Skill Gap Analysis
+Compares user answers with required skills and outputs:
+
+- Readiness percentage
+- Missing skills
+- Improvement suggestions
+
+---
+
+### 6️⃣ Dashboard System
+Displays:
+- Welcome message
+- Assessment status
+- Strength summary
+- Roadmap access
+- Activity history
+
+---
+
+### 7️⃣ Persistent Login
+- HTTP-only JWT cookie
+- Session persistence across reload
+- Fetches user from MongoDB on refresh
+- Role-based dashboard rendering
+
+---
+
+## 📂 Database Schema Overview
+
+Collections:
+
+- USER
+- ASSESSMENT
+- ROADMAP
+- ACTIVITY_LOG
+
+Relationships:
+
+- USER → 1:1 → ASSESSMENT
+- USER → 1:1 → ROADMAP
+- USER → 1:N → ACTIVITY_LOG
+
+---
+
+## 🔐 Security Features
+
+- Password hashing (bcrypt)
+- JWT token verification
+- Secure cookie handling
+- MongoDB Atlas IP whitelist
+- Role-based access control
+
+---
+
+## ⚙️ How to Run Locally
+
+Clone repository:
+
+git clone https://github.com/your-username/ai-career-guidance.git
+
+Navigate into project:
+
+cd ai-career-guidance
+
+Install dependencies:
+
+npm install
+
+Create environment file:
+
+cp .env.example .env.local
+
+Edit `.env.local`:
+
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+
+Run development server:
+
+npm run dev
+
+Open:
+
+http://localhost:3000
+
+---
+
+## 📊 Assessment Flow
+
+Landing Page  
+→ Login / Google Sign-In  
+→ Start Career Assessment  
+→ 6 Adaptive Questions  
+→ Strength Profile Generated  
+→ Roadmap Created  
+→ Dashboard Display  
+→ Skill Gap Analysis  
+
+---
+
+## 🎯 Expected Outcomes
+
+- Personalized career clarity  
+- Structured roadmap  
+- Improved decision confidence  
+- Clear skill development path  
+- Continuous progress tracking  
 
 ---
 
 ## 🌟 Vision
 
-Education should not be a privilege.
-**Classless is built on the belief that every student, no matter where they live or what device they own, deserves access to quality learning.**
+To build an intelligent career guidance engine that adapts to individual strengths and generates actionable career roadmaps instead of static suggestions.
 
 ---
 
-## 📌 How to Run Locally
+## 🧪 Future Enhancements
 
-```bash
-# Clone repository
-git clone https://github.com/vigneshsiva11/classless-app.git
-
-# Navigate to project
-cd classless-app
-
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local and add your API keys:
-# OPENAI_API_KEY=sk-your-openai-key-here
-# GEMINI_API_KEY=your-gemini-key-here
-# (Optional for RAG) Pinecone Vector DB
-# PINECONE_API_KEY=your-pinecone-key
-# PINECONE_INDEX=your-index-name
-
-# Run the development server
-npm run dev
-```
-
-## 📚 RAG (Retrieval-Augmented Generation)
-
-We include a RAG Tutor for syllabus-based Q&A.
-
-### 1) Install additional dependencies
-
-```bash
-npm i @pinecone-database/pinecone tsx
-```
-
-### 2) Environment variables
-
-Add to `.env.local` and Vercel Project Settings → Environment Variables:
-
-```
-GEMINI_API_KEY=...
-PINECONE_API_KEY=...
-PINECONE_INDEX=classless-rag
-```
-
-### 3) Create a Pinecone index
-
-- Metric: cosine
-- Dimension: 768 (Gemini text-embedding-004)
-
-### 4) Ingest syllabus content
-
-Place `.txt` or `.md` files under `content/` (each file will be chunked ~300 words), then run:
-
-```bash
-npm run ingest:rag -- ./content
-```
-
-### 5) Use in the app
-
-- Student Dashboard → “RAG Tutor” → `/rag`
-- Backend endpoint: `/api/ai/rag` (uses Pinecone if configured, else in-memory demo corpus)
-
-## 🎤 Voice-to-Text Setup
-
-For accurate voice-to-text transcription, set up OpenAI Whisper API:
-
-1. **Get OpenAI API Key**: Visit [OpenAI Platform](https://platform.openai.com/) and create an API key
-2. **Configure Environment**: Add `OPENAI_API_KEY=sk-your-key-here` to your `.env.local` file
-3. **Test Transcription**: Visit `/test-openai-transcription.html` to test voice transcription
-
-See [OPENAI_SETUP.md](./OPENAI_SETUP.md) for detailed setup instructions.
-
-## 🧪 Testing Voice Transcription
-
-1. Open `http://localhost:3000/test-openai-transcription.html`
-2. Click "Start Recording" and speak your question
-3. Click "Stop Recording" when done
-4. Click "Transcribe" to convert speech to text
-5. The system will use OpenAI Whisper for accurate transcription
+- Resume builder
+- Internship recommendations
+- Career comparison engine
+- AI coaching chatbot
+- Readiness scoring system
+- Voice-based assessment
+- Mentor marketplace
 
 ---
+
+## 🎓 Academic Value
+
+This project demonstrates:
+
+- Full-stack development
+- REST API architecture
+- MongoDB schema design
+- JWT authentication
+- Google OAuth integration
+- Adaptive logic system
+- NLP-based classification
+- Roadmap generation engine
+- Secure session persistence
+
+---
+
+## 📌 Project Status
+
+✔ Authentication complete  
+✔ Adaptive assessment complete  
+✔ Roadmap generation complete  
+✔ MongoDB persistence complete  
+✔ Session persistence implemented  
+
+Next Phase:
+- Advanced skill gap intelligence
+- Coaching engine expansion
+- Performance optimization
