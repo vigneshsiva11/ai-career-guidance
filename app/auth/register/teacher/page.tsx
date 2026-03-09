@@ -74,24 +74,30 @@ export default function TeacherRegisterPage() {
       const result = await response.json();
 
       if (result.success) {
-        // Best-effort cookie login; do not block dashboard navigation on this.
-        fetch("/api/auth/login", {
+        const loginResponse = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             identifier: formData.phoneNumber,
             password: formData.password,
           }),
-        }).catch(() => {});
+        });
+        const loginResult = await loginResponse.json();
+        if (!loginResult.success || !loginResult.data) {
+          toast.error("Registration succeeded, but auto-login failed. Please sign in.");
+          router.push("/auth/login/teacher");
+          return;
+        }
 
         if (!result.data) {
           toast.error("Registration completed but user profile is missing. Please sign in.");
           router.push("/auth/login/teacher");
           return;
         }
-        localStorage.setItem("classless_user", JSON.stringify(result.data));
+        localStorage.setItem("classless_user", JSON.stringify(loginResult.data));
         toast.success("Registration successful!");
-        router.replace("/dashboard");
+        router.replace("/");
       } else {
         toast.error(result.error || "Registration failed");
       }

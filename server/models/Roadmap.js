@@ -23,6 +23,21 @@ const RoadmapSchema = new mongoose.Schema(
     },
     readinessScore: { type: Number, default: 0 },
     estimatedTimeline: { type: String, default: "" },
+    requiredSkills: {
+      core: { type: [String], default: [] },
+      advanced: { type: [String], default: [] },
+      industry: { type: [String], default: [] },
+    },
+    tools: {
+      type: [
+        {
+          name: { type: String, default: "" },
+          description: { type: String, default: "" },
+          youtubePlaylist: { type: String, default: "" },
+        },
+      ],
+      default: [],
+    },
     toolsToLearn: { type: [String], default: [] },
     certifications: { type: [String], default: [] },
     realWorldProjects: { type: [String], default: [] },

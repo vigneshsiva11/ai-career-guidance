@@ -485,7 +485,7 @@ export default function CareerGuidancePage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <TrendingUp className="h-5 w-5 text-green-600" />
-              <span>Trending Careers in 2024</span>
+              <span>Trending Careers in 2026</span>
             </CardTitle>
             <CardDescription>
               High-growth career opportunities with promising futures

@@ -3,6 +3,12 @@ import type { Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
+import { RuntimeErrorGuard } from "@/components/runtime-error-guard";
+
+// Force fully dynamic SSR across the app router tree.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 export const metadata: Metadata = {
   title: "Classless",
@@ -47,7 +53,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={GeistSans.className}>{children}</body>
+      <body className={GeistSans.className}>
+        <RuntimeErrorGuard />
+        {children}
+      </body>
     </html>
   );
 }

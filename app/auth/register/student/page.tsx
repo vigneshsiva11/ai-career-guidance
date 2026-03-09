@@ -4,6 +4,7 @@ import type React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Script from "next/script";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,21 +26,21 @@ import {
   BookOpen,
   Phone,
   User,
-  Hash,
   Building,
-  Users,
   Lock,
   ArrowLeft,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
+import { EDUCATION_LEVEL_OPTIONS } from "@/lib/education-levels";
+import { GoogleSSOButton } from "@/components/auth/google-sso-button";
 
 export default function StudentRegisterPage() {
   const [formData, setFormData] = useState({
-    parentMobile: "",
+    mobileNumber: "",
     fullName: "",
-    rollNumber: "",
-    standard: "",
-    gender: "",
+    email: "",
+    educationLevel: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -50,8 +51,7 @@ export default function StudentRegisterPage() {
     setIsLoading(true);
 
     try {
-      // Basic client-side validation
-      const phone = formData.parentMobile.trim();
+      const phone = formData.mobileNumber.trim();
       const phoneDigits = phone.replace(/\D/g, "");
       const isValidPhone =
         /^\+?[0-9\-\s()]{7,20}$/.test(phone) &&
@@ -59,8 +59,11 @@ export default function StudentRegisterPage() {
         phoneDigits.length <= 15;
       const name = formData.fullName.trim();
       const isValidName = /^[A-Za-z\s'.-]{2,80}$/.test(name);
+      const email = formData.email.trim().toLowerCase();
+      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
       if (!isValidPhone) {
-        toast.error("Please enter a valid parent mobile number");
+        toast.error("Please enter a valid mobile number");
         setIsLoading(false);
         return;
       }
@@ -69,8 +72,13 @@ export default function StudentRegisterPage() {
         setIsLoading(false);
         return;
       }
-      if (!/^\d{1,20}$/.test(formData.rollNumber.trim())) {
-        toast.error("Roll number should contain digits only");
+      if (!isValidEmail) {
+        toast.error("Please enter a valid email address");
+        setIsLoading(false);
+        return;
+      }
+      if (!formData.educationLevel.trim()) {
+        toast.error("Education Level is required");
         setIsLoading(false);
         return;
       }
@@ -79,19 +87,19 @@ export default function StudentRegisterPage() {
         setIsLoading(false);
         return;
       }
+
       const response = await fetch("/api/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phone_number: formData.parentMobile,
+          phone_number: formData.mobileNumber,
           name: formData.fullName,
+          email,
           user_type: "student",
           preferred_language: "en",
-          education_level: formData.standard,
-          roll_number: formData.rollNumber,
-          gender: formData.gender,
+          education_level: formData.educationLevel,
           password: formData.password,
         }),
       });
@@ -99,31 +107,32 @@ export default function StudentRegisterPage() {
       const result = await response.json();
 
       if (result.success) {
-        // Best-effort cookie login; dashboard access should not be blocked by this call.
-        fetch("/api/auth/login", {
+        const loginResponse = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
-            identifier: formData.parentMobile,
+            identifier: email,
             password: formData.password,
           }),
-        }).catch(() => {});
-
-        // Map roll number to phone for student login
-        if (formData.rollNumber) {
-          localStorage.setItem(
-            `classless_roll_to_phone_${formData.rollNumber.trim()}`,
-            result.data?.phone_number || formData.parentMobile
-          );
-        }
-        if (!result.data) {
-          toast.error("Registration completed but user profile is missing. Please sign in.");
+        });
+        const loginResult = await loginResponse.json();
+        if (!loginResult.success || !loginResult.data) {
+          toast.error("Registration succeeded, but auto-login failed. Please sign in.");
           router.push("/auth/login/student");
           return;
         }
-        localStorage.setItem("classless_user", JSON.stringify(result.data));
+
+        if (!result.data) {
+          toast.error(
+            "Registration completed but user profile is missing. Please sign in."
+          );
+          router.push("/auth/login/student");
+          return;
+        }
+        localStorage.setItem("classless_user", JSON.stringify(loginResult.data));
         toast.success("Registration successful!");
-        router.replace("/dashboard");
+        router.replace("/");
       } else {
         toast.error(result.error || "Registration failed");
       }
@@ -136,8 +145,9 @@ export default function StudentRegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
+      <Card className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white/90 shadow-2xl backdrop-blur-sm">
         <CardHeader className="text-center">
           <Link
             href="/auth/login"
@@ -151,31 +161,49 @@ export default function StudentRegisterPage() {
             className="flex items-center justify-center space-x-2 mb-4 hover:opacity-80 transition-opacity"
           >
             <BookOpen className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Classless</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              Classless
+            </h1>
           </Link>
-          <CardTitle>Student Registration</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">
+            Student Registration
+          </CardTitle>
+          <CardDescription className="text-slate-600">
             Create your student account to start learning with AI tutoring
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="space-y-4 mb-6">
+            <GoogleSSOButton
+              educationLevel={formData.educationLevel}
+              requireEducationLevel
+            />
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-slate-200" />
+              <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                OR
+              </span>
+              <div className="h-px flex-1 bg-slate-200" />
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="parentMobile">Parent Mobile Number</Label>
+              <Label htmlFor="mobileNumber">Mobile Number</Label>
               <div className="relative">
-                <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <Input
-                  id="parentMobile"
+                  id="mobileNumber"
                   type="tel"
                   placeholder="+91-9876543210"
-                  value={formData.parentMobile}
+                  value={formData.mobileNumber}
                   onChange={(e) => {
                     const next = e.target.value;
                     if (/^[0-9+\-\s()]*$/.test(next)) {
-                      setFormData({ ...formData, parentMobile: next });
+                      setFormData({ ...formData, mobileNumber: next });
                     }
                   }}
-                  className="pl-10"
+                  className="pl-10 rounded-xl border-slate-300 focus-visible:ring-blue-500"
                   inputMode="tel"
                   pattern="^[0-9+\-\s()]{7,20}$"
                   maxLength={20}
@@ -187,7 +215,7 @@ export default function StudentRegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <Input
                   id="fullName"
                   type="text"
@@ -199,7 +227,7 @@ export default function StudentRegisterPage() {
                       setFormData({ ...formData, fullName: next });
                     }
                   }}
-                  className="pl-10"
+                  className="pl-10 rounded-xl border-slate-300 focus-visible:ring-blue-500"
                   inputMode="text"
                   pattern="^[A-Za-z\s'.-]{2,80}$"
                   maxLength={80}
@@ -209,75 +237,42 @@ export default function StudentRegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rollNumber">Roll Number</Label>
+              <Label htmlFor="email">Email Address</Label>
               <div className="relative">
-                <Hash className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <Input
-                  id="rollNumber"
-                  type="text"
-                  placeholder="Enter your roll number"
-                  value={formData.rollNumber}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    if (/^\d*$/.test(next)) {
-                      setFormData({ ...formData, rollNumber: next });
-                    }
-                  }}
-                  className="pl-10"
-                  inputMode="numeric"
-                  pattern="^\d{1,20}$"
-                  maxLength={20}
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  className="pl-10 rounded-xl border-slate-300 focus-visible:ring-blue-500"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="standard">Standard</Label>
+              <Label htmlFor="educationLevel">Education Level</Label>
               <div className="relative">
-                <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
+                <Building className="absolute left-3 top-3 h-4 w-4 text-slate-400 z-10" />
                 <Select
-                  value={formData.standard}
+                  value={formData.educationLevel}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, standard: value })
+                    setFormData({ ...formData, educationLevel: value })
                   }
                 >
-                  <SelectTrigger className="pl-10">
-                    <SelectValue placeholder="Select your standard" />
+                  <SelectTrigger className="pl-10 rounded-xl border-slate-300 focus-visible:ring-blue-500">
+                    <SelectValue placeholder="Select your education level" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Class 6">Class 6</SelectItem>
-                    <SelectItem value="Class 7">Class 7</SelectItem>
-                    <SelectItem value="Class 8">Class 8</SelectItem>
-                    <SelectItem value="Class 9">Class 9</SelectItem>
-                    <SelectItem value="Class 10">Class 10</SelectItem>
-                    <SelectItem value="Class 11">Class 11</SelectItem>
-                    <SelectItem value="Class 12">Class 12</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gender">Gender</Label>
-              <div className="relative">
-                <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
-                <Select
-                  value={formData.gender}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, gender: value })
-                  }
-                >
-                  <SelectTrigger className="pl-10">
-                    <SelectValue placeholder="Select your gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                    <SelectItem value="prefer_not_to_say">
-                      Prefer not to say
-                    </SelectItem>
+                    {EDUCATION_LEVEL_OPTIONS.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -286,7 +281,7 @@ export default function StudentRegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <Input
                   id="password"
                   type="password"
@@ -295,7 +290,7 @@ export default function StudentRegisterPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="pl-10"
+                  className="pl-10 rounded-xl border-slate-300 focus-visible:ring-blue-500"
                   minLength={6}
                   required
                 />
@@ -304,7 +299,7 @@ export default function StudentRegisterPage() {
 
             <Button
               type="submit"
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full rounded-xl bg-indigo-600 shadow-md transition-all duration-300 hover:bg-indigo-700 hover:shadow-lg"
               disabled={isLoading}
             >
               {isLoading ? "Creating Account..." : "Create Student Account"}
@@ -312,11 +307,11 @@ export default function StudentRegisterPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Already have a student account?{" "}
               <Link
                 href="/auth/login/student"
-                className="text-green-600 hover:underline"
+                className="text-indigo-600 hover:underline"
               >
                 Sign in here
               </Link>

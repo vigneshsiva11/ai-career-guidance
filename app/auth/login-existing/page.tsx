@@ -30,7 +30,7 @@ export default function ExistingLoginPage() {
         // Store user info in localStorage (simple auth for hackathon)
         localStorage.setItem("classless_user", JSON.stringify(result.data))
         toast.success("Login successful!")
-        router.push("/dashboard")
+        router.push("/")
       } else {
         toast.error("User not found. Please register first.")
         router.push("/auth/login")

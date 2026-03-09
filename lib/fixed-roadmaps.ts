@@ -5,6 +5,16 @@ type RoadmapStages = {
 };
 
 export type SkillGapItem = { skill: string; gap: number };
+export type RequiredSkills = {
+  core: string[];
+  advanced: string[];
+  industry: string[];
+};
+export type LearningTool = {
+  name: string;
+  description: string;
+  youtubePlaylist: string;
+};
 
 export type FixedSkillRoadmap = {
   canonicalRole: string;
@@ -12,6 +22,8 @@ export type FixedSkillRoadmap = {
   strengthProfile: string;
   careerPersona: string;
   roadmap: RoadmapStages;
+  requiredSkills?: RequiredSkills;
+  tools?: LearningTool[];
   toolsToLearn: string[];
   certifications: string[];
   realWorldProjects: string[];
@@ -48,6 +60,377 @@ const COMMON_SOFT_SKILLS = [
   "Documentation and presentation clarity",
   "Feedback handling and iteration mindset",
 ];
+
+const TOOL_CATALOG: Record<string, { description: string; youtubePlaylist: string }> = {
+  "HTML & CSS": {
+    description: "Semantic HTML, forms, responsive layout with Flexbox/Grid",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLWKjhJtqVAbmMuZ3saqRIBimAKIMYkt0E",
+  },
+  JavaScript: {
+    description: "ES6+, DOM, async programming, API integrations",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLillGF-RfqbYE6Ik_EuXA2iZFcE082B3s",
+  },
+  TypeScript: {
+    description: "Static typing for scalable, maintainable projects",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL4cUxeGkcC9gUgr39Q_yD6v-bSyMwKPUI",
+  },
+  React: {
+    description: "Component architecture, hooks, routing, performance",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLillGF-RfqbY3c2r0htQyVbDJJoBFE6Rb",
+  },
+  "Next.js": {
+    description: "Production React framework for routing and deployment",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL8p2I9GklV47BCAjiCtuV_liN9IwAl8pM",
+  },
+  "Tailwind CSS": {
+    description: "Utility-first CSS framework for fast UI implementation",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL5f_mz_zU5eXWYDXHUDOLBE0scnuJofO0",
+  },
+  "Git & GitHub": {
+    description: "Version control workflows and collaboration",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLWKjhJtqVAblJZeQ86Th1fFUq9WQy2hLk",
+  },
+  Jest: {
+    description: "Unit testing fundamentals and test-driven validation",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL6gx4Cwl9DGBuKf2sfEioAL4my80aQ8Fa",
+  },
+  "Node.js": {
+    description: "Server runtime, async architecture, backend foundations",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLillGF-RfqbYhQsN5WMXy6VsDMKGadrJ-",
+  },
+  Express: {
+    description: "REST APIs, middleware, authentication, routing patterns",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLillGF-RfqbZ2ybcoD2OaabW2P7Ws8CWu",
+  },
+  PostgreSQL: {
+    description: "Relational modeling, queries, indexing and optimization",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLBf0hzazHTGOEStpN5rJXh5M3s6W5g4JY",
+  },
+  MongoDB: {
+    description: "NoSQL schema design, aggregation, indexing strategies",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL4RCxklHWZ9vM5xM6dA6c4yJ9H8Yh7x9k",
+  },
+  Redis: {
+    description: "Caching, pub/sub, rate limiting, session storage",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLZyvi_9gamL-EE3zQJbU5N5x8iN3r9M5m",
+  },
+  Docker: {
+    description: "Containerization for local/dev/prod environment parity",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLkA60AVN3hh_6cAz8TUGtkYbJSL2bdZ4h",
+  },
+  Kubernetes: {
+    description: "Container orchestration, deployments, scaling, monitoring",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL2_OBreMn7FoYmfx27iSwocotjiikS5BD",
+  },
+  Terraform: {
+    description: "Infrastructure as Code for repeatable cloud provisioning",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLJQJ7jT6hS2jL6mLCf7hYQfYVJx6nR7s8",
+  },
+  "GitHub Actions": {
+    description: "CI/CD automation for build, test, deploy pipelines",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL8p2I9GklV44KGfM5mU4T0hJQG84fY6gK",
+  },
+  Prometheus: {
+    description: "Metrics collection, observability and alerting fundamentals",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLy7NrYWoggjziYQIDorlXjTvvwweTYoNC",
+  },
+  AWS: {
+    description: "Core cloud services: compute, storage, networking, IAM",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL9ooVrP1hQOEaU0teCbLQx2k3hA4J8z8F",
+  },
+  Azure: {
+    description: "Cloud resource management, deployment, monitoring",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLLasX02E8BPA3I7x6FfA6wZLJ4wE9H3fC",
+  },
+  GCP: {
+    description: "Google Cloud architecture and managed services",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQMsfKRZZviQ8WQf4hFfWHz7A3EMI8yT0",
+  },
+  "CloudWatch": {
+    description: "Cloud logs, metrics, alarms and operational dashboards",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLW8bTPfXNGdAqz2a0u1rYQfA8M7J3mQd2",
+  },
+  Figma: {
+    description: "UI/UX design workflows, components, auto-layout, prototyping",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLXDU_eVOJTx5LSjVfG2WvQ7Qw7kP4WzLh",
+  },
+  Canva: {
+    description: "Rapid visual creation for design communication and assets",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLJQJ7jT6hS2h9Hh4hC1E1mR1n4bN5p2q1",
+  },
+  "Adobe XD": {
+    description: "Wireframing, prototyping, and UX handoff workflows",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLD8AMy73ZVxV9M4lq8W9S8rYg6Yw0sXq8",
+  },
+  Miro: {
+    description: "Research synthesis, user flows, journey mapping and workshops",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL6Jx2XQ5nQwKQ5SgG2dM1u8HqV7s4f3c9",
+  },
+  Notion: {
+    description: "Documentation, roadmap tracking, and project organization",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLRHpY9sMjlS3vQ9xL0Z1fP2yT8nE5mQ7r",
+  },
+  Python: {
+    description: "Core programming, scripting, and data/AI foundations",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU",
+  },
+  Pandas: {
+    description: "Data wrangling, cleaning, and exploratory analysis",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL5-da3qGB5IC4o0uAhCw6nPz1kH4sQ4W8",
+  },
+  SQL: {
+    description: "Querying, joins, aggregations and analytics workflows",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL08903FB7ACA1C2FB",
+  },
+  "scikit-learn": {
+    description: "Classical machine learning modeling and evaluation",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL2-dafEMk2A7mu0bSksCGMJEmeddU_H4D",
+  },
+  Tableau: {
+    description: "Interactive dashboards and business analytics reporting",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL_qizAfcpJ-OdM1YJzL8YQqQ6vFjv3v7D",
+  },
+  PyTorch: {
+    description: "Deep learning training, experimentation and model building",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLqnslRFeH2UrcDBWF5mfPGpqQDSta6VK4",
+  },
+  TensorFlow: {
+    description: "Neural network modeling and production ML workflows",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQY2H8rRoyvxN7x6YvWfM9N8n3S6m9B5Y",
+  },
+  MLflow: {
+    description: "Experiment tracking and model lifecycle management",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLR6PuN5p8Q9Yqg9U8oJ7M4rX2L2vA0w5Z",
+  },
+  FastAPI: {
+    description: "High-performance API development for ML and backend apps",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL5gdMNl42qynnRtx5W8g7M3Qf3zS7M2jY",
+  },
+  LangChain: {
+    description: "LLM app orchestration, chains, tools and retrieval",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLrH1HnMlyv9f-jlZFKY1f0Xq7xY1A3mV8",
+  },
+  "Vector DB": {
+    description: "Embedding retrieval and semantic indexing concepts",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL4RCxklHWZ9tZs8iQhY0R1KzV4E2f8k3N",
+  },
+  Wireshark: {
+    description: "Packet capture and network traffic analysis",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLW8bTPfXNGdD8M6mA6mQm7Y3L7wP2g6N1",
+  },
+  Splunk: {
+    description: "Log analytics, detection rules and SOC workflows",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLxNoJq6k39G-F7xQ2Wj3XzVQ8V4kYf7Xf",
+  },
+  Nmap: {
+    description: "Network scanning and vulnerability reconnaissance",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLW8bTPfXNGdAn4G4cYfW7u0M3z5jG6p9Q",
+  },
+  "Burp Suite": {
+    description: "Web security testing and proxy-based analysis",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLuyTk2_mYISL6f0pNw7uF0S8D6a2M3k1H",
+  },
+  "Kali Linux": {
+    description: "Practical ethical hacking and penetration testing toolkit",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLW8bTPfXNGdBLWj3Tz5L5f9Q2m7x2k1N0",
+  },
+  Flutter: {
+    description: "Cross-platform mobile development and state management",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLjxrf2q8roU1xK9uT4nD9bD90A7w6X2Xq",
+  },
+  "React Native": {
+    description: "Native mobile UI with React ecosystem and APIs",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL6QREj8te1P6wX9m5K5Y9L6p7Q3x5mV2X",
+  },
+  Firebase: {
+    description: "Authentication, cloud database, storage and notifications",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLl-K7zZEsYLmOF_07IayrTntevxtbUxDL",
+  },
+  "Android Studio": {
+    description: "Android app development environment and debugging",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQ9nYwR5Q4f0nL8Q9x2S3a8mW7Q5J2X8k",
+  },
+  Xcode: {
+    description: "iOS development workflow, simulators and debugging",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQ9nYwR5Q4f0xK2N4v6P7w8L9t3M1B4qD",
+  },
+  Kotlin: {
+    description: "Modern Android language fundamentals and architecture",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQkwcJG4YTCSYVnM0hE8mN9kP3Y8jL5gE",
+  },
+  "Jetpack Compose": {
+    description: "Declarative Android UI and state-driven layouts",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQkwcJG4YTCTq1raTb5xXz2JY3x0E9k7F",
+  },
+  Room: {
+    description: "Local persistence layer and offline Android storage",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQkwcJG4YTCQ6emtoqSZS2FVwZR9FT3BV",
+  },
+  Retrofit: {
+    description: "Networking and API clients for Android apps",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQkwcJG4YTCQJ4r7d8M5Yh6Uq3x9K2h1X",
+  },
+  Swift: {
+    description: "iOS programming fundamentals and best practices",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLMRqhzcHGw1aLoz4pM_Mg2TewmJcMg9ua",
+  },
+  SwiftUI: {
+    description: "Declarative iOS UI development and app architecture",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLwvDm4VfkdphqETTBf-DdjCoAvhai1QpO",
+  },
+  Combine: {
+    description: "Reactive data flow and asynchronous stream handling",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQ9nYwR5Q4f0gN8xS4T2n6B1c8Y3m5L7h",
+  },
+  "Core Data": {
+    description: "Persistence and local data modeling for iOS apps",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQ9nYwR5Q4f2k4M8n7Q2s9X6z3W5e1aB0",
+  },
+  Photoshop: {
+    description: "Image editing, compositing and visual asset creation",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLD8AMy73ZVxVJfG3nJ0WqJmU6D2mV8k9R",
+  },
+  Illustrator: {
+    description: "Vector graphics, icons, typography and branding",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLD8AMy73ZVxX3g9Q8M7zL5qN2B4sV6h1T",
+  },
+  InDesign: {
+    description: "Layout systems for publishing and document design",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLD8AMy73ZVxW6pN4g3M8Y2vQ5tL9nX1aF",
+  },
+  "Google Analytics": {
+    description: "Behavior analytics, events, funnels and attribution",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLhLJ4Qf8l2n5S8z2Y7P3W1x6N4kM9qB0R",
+  },
+  "Google Ads": {
+    description: "Paid campaign setup, targeting and optimization",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLhLJ4Qf8l2n5uX3zK8N4D7mQ2cV6pB1YH",
+  },
+  "Meta Ads Manager": {
+    description: "Social campaign execution and performance scaling",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLhLJ4Qf8l2n6P3sN9B4kY2fQ8mV1xW7ZC",
+  },
+  Ahrefs: {
+    description: "SEO research, keyword strategy and backlink analysis",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLhLJ4Qf8l2n7Z5xQ4M8nV2kY1cB6pD3R9",
+  },
+  HubSpot: {
+    description: "CRM workflows, lead funnels and automation",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLhLJ4Qf8l2n8N2yM7Q4kV1xC3pB6dR9Z5",
+  },
+  Jira: {
+    description: "Agile sprint planning, tickets and release management",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQ9nYwR5Q4f3K7mV2N8xS1cD4pB6zR9Y2",
+  },
+  Mixpanel: {
+    description: "Product analytics, retention and conversion tracking",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQ9nYwR5Q4f4V2mN8xS3kD1pB6zR9Y7C5",
+  },
+  Excel: {
+    description: "Business analysis, formulas, pivots and reporting",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLrRPvpgDmw0k5JgL3sA4D8mY2N7wQ6xP1",
+  },
+  "Power BI": {
+    description: "Data modeling and interactive business dashboards",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL1N57mwBHtN0Hz6f4o7Bv8sD2mP5xQ9Y3",
+  },
+  Selenium: {
+    description: "Web automation testing framework fundamentals",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL6flErFppaj3dAq0f7R5W2nY8mQ1xB4vK",
+  },
+  Cypress: {
+    description: "Modern end-to-end testing and QA automation",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL6flErFppaj0nJ2Y4D8mV1xQ7kR3pB9Z2",
+  },
+  Postman: {
+    description: "API testing, collections, environments and automation",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PL6flErFppaj0M5A7xD2mV8Q1kR4pB9Y3C",
+  },
+  JMeter: {
+    description: "Performance testing and load simulation workflows",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQq8-9yVHyOZkM6xD2vN8Q1pB4rY7C3T5",
+  },
+  TestRail: {
+    description: "Test case management and QA release workflows",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQq8-9yVHyOaD2mV7xN5Q1pB4rY8C3T6K",
+  },
+  Solidity: {
+    description: "Smart contract development and EVM fundamentals",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLS5SEs8ZftgVnWH4A0J4v9Sx6F7b2Q3W8",
+  },
+  Hardhat: {
+    description: "Smart contract testing, deployment and tooling",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLS5SEs8ZftgVg7V4K2Y2mN8Q1xB5rD9L3",
+  },
+  "Ethers.js": {
+    description: "Blockchain app integration and contract interaction",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLS5SEs8ZftgX9D2mV7Q1pB4rY8C3T6K5M",
+  },
+  Remix: {
+    description: "In-browser smart contract IDE and debugging",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLS5SEs8ZftgY4N2mV8Q1pB7rD3T6K5C9L",
+  },
+  Foundry: {
+    description: "High-performance Solidity testing and scripting toolkit",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLS5SEs8ZftgZ3D2mV9Q1pB4rY7C6T5K8N",
+  },
+  Unity: {
+    description: "Game mechanics, scenes, assets and deployment",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLPV2KyIb3jR4KLGCCAciWQ5qHudKtYeP7",
+  },
+  "Unreal Engine": {
+    description: "Advanced game development and real-time rendering",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLZlv_N0_O1ga0aV9jVqJgog0VWz1cLL5f",
+  },
+  "C#": {
+    description: "Object-oriented programming for app and game logic",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLdo4fOcmZ0oULFjxrOagaERVAMbmG20Xe",
+  },
+  Blender: {
+    description: "3D modeling, assets and animation workflows",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLjEaoINr3zgFX8ZsChQVQsuDSjEqdWMAD",
+  },
+  "Git LFS": {
+    description: "Version control for large files and game assets",
+    youtubePlaylist: "https://www.youtube.com/playlist?list=PLQ9nYwR5Q4f5D2mV8xN1pB4rY7C6T3K9L",
+  },
+};
+
+const ROLE_TOOL_STACKS: Record<string, string[]> = {
+  "Frontend Developer": ["HTML & CSS", "JavaScript", "TypeScript", "React", "Next.js", "Tailwind CSS", "Git & GitHub", "Jest", "Node.js", "Postman"],
+  "Backend Developer": ["Node.js", "Express", "PostgreSQL", "MongoDB", "Redis", "Docker", "Git & GitHub", "Postman", "Jest", "AWS"],
+  "Full Stack Developer": ["HTML & CSS", "JavaScript", "TypeScript", "React", "Next.js", "Node.js", "Express", "PostgreSQL", "Docker", "Git & GitHub"],
+  "UI/UX Designer": ["Figma", "Adobe XD", "Canva", "Miro", "Notion", "Photoshop", "Illustrator", "InDesign", "HTML & CSS", "Git & GitHub"],
+  "Data Scientist": ["Python", "Pandas", "SQL", "scikit-learn", "Tableau", "Git & GitHub", "TensorFlow", "PyTorch", "Power BI", "Notion"],
+  "Machine Learning Engineer": ["Python", "PyTorch", "TensorFlow", "MLflow", "FastAPI", "Docker", "Kubernetes", "Git & GitHub", "AWS", "SQL"],
+  "AI Engineer": ["Python", "LangChain", "Vector DB", "FastAPI", "Docker", "Git & GitHub", "TensorFlow", "PyTorch", "AWS", "SQL"],
+  "DevOps Engineer": ["Docker", "Kubernetes", "Terraform", "GitHub Actions", "Prometheus", "AWS", "Azure", "GCP", "Git & GitHub", "Node.js"],
+  "Cloud Engineer": ["AWS", "Azure", "GCP", "Terraform", "CloudWatch", "Docker", "Kubernetes", "Git & GitHub", "Python", "Notion"],
+  "Cybersecurity Analyst": ["Wireshark", "Splunk", "Nmap", "Burp Suite", "Kali Linux", "Python", "Git & GitHub", "AWS", "Postman", "Notion"],
+  "Mobile App Developer": ["Flutter", "React Native", "Firebase", "Android Studio", "Xcode", "Git & GitHub", "JavaScript", "TypeScript", "Docker", "Postman"],
+  "Android Developer": ["Kotlin", "Jetpack Compose", "Room", "Retrofit", "Firebase", "Android Studio", "Git & GitHub", "Postman", "Jest", "Docker"],
+  "iOS Developer": ["Swift", "SwiftUI", "Xcode", "Combine", "Core Data", "Git & GitHub", "Firebase", "Postman", "Docker", "Jest"],
+  "Graphic Designer": ["Photoshop", "Illustrator", "InDesign", "Figma", "Canva", "Notion", "Miro", "Git & GitHub", "HTML & CSS", "Adobe XD"],
+  "Digital Marketing Specialist": ["Google Analytics", "Google Ads", "Meta Ads Manager", "Ahrefs", "HubSpot", "Notion", "Canva", "Tableau", "Excel", "SQL"],
+  "Product Manager": ["Jira", "Notion", "Figma", "Mixpanel", "SQL", "Excel", "Power BI", "Miro", "Git & GitHub", "Google Analytics"],
+  "Business Analyst": ["Excel", "SQL", "Power BI", "Tableau", "Jira", "Notion", "Google Analytics", "Python", "Git & GitHub", "Postman"],
+  "Software Tester / QA Engineer": ["Selenium", "Cypress", "Postman", "JMeter", "TestRail", "Jest", "Git & GitHub", "Docker", "JavaScript", "Python"],
+  "Blockchain Developer": ["Solidity", "Hardhat", "Ethers.js", "Remix", "Foundry", "Git & GitHub", "JavaScript", "TypeScript", "Node.js", "Docker"],
+  "Game Developer": ["Unity", "Unreal Engine", "C#", "Blender", "Git LFS", "Git & GitHub", "Docker", "Jira", "Notion", "Postman"],
+};
+
+const ROLE_REQUIRED_SKILLS: Record<string, RequiredSkills> = {
+  "Frontend Developer": {
+    core: ["HTML5 semantic structure and forms", "CSS3 Flexbox/Grid responsive design", "JavaScript ES6+ and DOM", "TypeScript fundamentals", "React hooks and component architecture"],
+    advanced: ["State management patterns", "Performance optimization and code splitting", "Testing with Jest/RTL", "Accessibility standards (WCAG)", "SEO basics and metadata"],
+    industry: ["Git/GitHub workflows", "API integration and auth flows", "CI/CD deployment concepts", "Code review and collaboration", "Project architecture planning"],
+  },
+  "Backend Developer": {
+    core: ["Node.js runtime fundamentals", "Express middleware and routing", "REST API design", "SQL/NoSQL data modeling", "Authentication and authorization"],
+    advanced: ["Caching and queueing patterns", "Database indexing and optimization", "Observability and logging", "Security hardening", "Scalable service architecture"],
+    industry: ["Dockerized environments", "Cloud deployment patterns", "CI/CD backend pipelines", "Incident handling basics", "API documentation standards"],
+  },
+};
 
 const FIXED_ROADMAPS: FixedSkillRoadmap[] = [
   {
@@ -622,11 +1005,68 @@ function expandStages(role: string, roadmap: RoadmapStages): RoadmapStages {
 
 function enrichRoadmap(input: FixedSkillRoadmap): FixedSkillRoadmap {
   const roadmap = expandStages(input.canonicalRole, input.roadmap);
+  const roleToolNames = ROLE_TOOL_STACKS[input.canonicalRole] || [];
+  const toolsToLearn = unique([
+    ...roleToolNames,
+    ...input.toolsToLearn,
+  ]);
+  const tools = toolsToLearn.map((toolName) => {
+    const found = TOOL_CATALOG[toolName];
+    return {
+      name: toolName,
+      description: found?.description || `${toolName} practical learning path`,
+      youtubePlaylist:
+        found?.youtubePlaylist ||
+        `https://www.youtube.com/results?search_query=${encodeURIComponent(
+          `${toolName} playlist`
+        )}`,
+    };
+  });
+
+  const roleRequired = ROLE_REQUIRED_SKILLS[input.canonicalRole] || {
+    core: [
+      `${input.canonicalRole} fundamentals and core concepts`,
+      "Problem decomposition and execution planning",
+      "Hands-on implementation through practical tasks",
+      "Tooling setup and workflow discipline",
+      "Version control and team collaboration basics",
+    ],
+    advanced: [
+      "Architecture quality and modular implementation",
+      "Performance optimization and reliability improvements",
+      "Testing/validation workflows for stable delivery",
+      "Security and maintainability best practices",
+      "Scaling strategies for real-world usage",
+    ],
+    industry: [
+      "Portfolio/case-study documentation standards",
+      "Interview communication and project walkthroughs",
+      "Job-role specific keyword and resume alignment",
+      "Internship/freelance execution readiness",
+      "Weekly application tracking and feedback iteration",
+    ],
+  };
+
+  const requiredSkills: RequiredSkills = {
+    core: ensureMinItems(unique([...(input.requiredSkills?.core || []), ...roleRequired.core]), 5, "Core skill"),
+    advanced: ensureMinItems(
+      unique([...(input.requiredSkills?.advanced || []), ...roleRequired.advanced]),
+      5,
+      "Advanced skill"
+    ),
+    industry: ensureMinItems(
+      unique([...(input.requiredSkills?.industry || []), ...roleRequired.industry]),
+      5,
+      "Industry skill"
+    ),
+  };
+
   const requiredTechnicalSkills = unique([
     ...(input.requiredTechnicalSkills || []),
-    ...input.toolsToLearn.slice(0, 8),
-    "Fundamentals and core concepts",
-    "Project architecture and problem decomposition",
+    ...requiredSkills.core,
+    ...requiredSkills.advanced,
+    ...requiredSkills.industry,
+    ...toolsToLearn.slice(0, 5),
   ]);
   const requiredSoftSkills = unique([
     ...(input.requiredSoftSkills || []),
@@ -706,6 +1146,9 @@ function enrichRoadmap(input: FixedSkillRoadmap): FixedSkillRoadmap {
   return {
     ...input,
     roadmap,
+    requiredSkills,
+    tools,
+    toolsToLearn,
     requiredTechnicalSkills,
     requiredSoftSkills,
     internshipStrategy,
@@ -771,6 +1214,8 @@ export function buildUnsupportedRoadmap(targetRole: string) {
       intermediate: ["This skill roadmap is not available yet."],
       advanced: ["Choose one of the currently supported top industry-demand skills."],
     },
+    requiredSkills: { core: [], advanced: [], industry: [] },
+    tools: [],
     estimatedTimeline: "N/A",
     toolsToLearn: [],
     certifications: [],

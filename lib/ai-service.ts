@@ -1,5 +1,4 @@
 import "server-only";
-// AI Service for Classless - Now using Google Gemini AI
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Question } from "./types";
 import {
@@ -24,6 +23,7 @@ export interface AIResponse {
 export class AIService {
   private isMockMode = false;
   private genAI: GoogleGenerativeAI | null = null;
+  private preferredModel: string;
 
   constructor() {
     // Check if we have the required API key
@@ -35,6 +35,7 @@ export class AIService {
     );
 
     this.isMockMode = !apiKey || apiKey === "your-gemini-api-key-here";
+    this.preferredModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     if (this.isMockMode) {
       console.warn(
         "[AI Service] Running in mock mode - GEMINI_API_KEY not found or invalid"
@@ -98,11 +99,37 @@ export class AIService {
         needsHumanReview: confidence < 0.7,
       };
     } catch (error) {
-      console.error("[AI Service] Error processing question:", error);
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("[AI Service] Error processing question:", message);
+      if (error instanceof Error && error.stack) {
+        console.error("[AI Service] Error stack:", error.stack);
+      }
 
-      // Fallback to basic response if AI fails
       const responseLanguage =
         (question as any).response_language || question.language || "en";
+
+      const quotaExceeded =
+        message.includes("429") ||
+        message.toLowerCase().includes("quota exceeded") ||
+        message.toLowerCase().includes("too many requests");
+
+      // If provider is down or quota is exceeded, return a useful non-generic response
+      // so Ask Question remains functional.
+      if (quotaExceeded) {
+        return {
+          answer: this.getQuotaAwareFallbackAnswer(
+            question.question_text,
+            responseLanguage
+          ),
+          confidence: 0.65,
+          language: responseLanguage,
+          sources: ["Local Tutor Fallback"],
+          followUpQuestions: this.getFallbackFollowUpQuestions(responseLanguage),
+          needsHumanReview: true,
+        };
+      }
+
+      // Fallback to basic response if AI fails
       const fallbackMessage = this.getFallbackMessage(responseLanguage);
 
       return {
@@ -124,41 +151,97 @@ export class AIService {
     if (!this.genAI) throw new Error("Gemini AI not initialized");
 
     const modelsToTry = [
-      "gemini-1.5-flash",
-      "gemini-1.5-flash-latest",
-      "gemini-1.5-pro",
+      this.preferredModel,
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-2.5-pro",
+      "gemini-2.0-flash-lite",
+      "gemini-2.0-flash",
     ];
 
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      const modelName = modelsToTry[Math.min(attempt, modelsToTry.length - 1)];
-      try {
-        const model = this.genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }],
-            },
-          ],
-        });
-        const response = await result.response;
-        const text = response.text();
-        if (text && text.trim().length > 0) return text;
-      } catch (err: any) {
-        const status = err?.status || err?.response?.status;
-        const isOverloaded =
-          status === 503 ||
-          (err?.message && String(err.message).includes("overloaded"));
-        if (attempt < maxRetries - 1 && isOverloaded) {
-          const delay = baseDelayMs * Math.pow(2, attempt);
-          await new Promise((res) => setTimeout(res, delay));
-          continue;
+    const uniqueModels = Array.from(new Set(modelsToTry.filter(Boolean)));
+    let lastError: unknown = null;
+
+    console.log("[AI Service] Model fallback chain:", uniqueModels.join(" -> "));
+    console.log("[AI Service] Prompt length:", prompt.length);
+
+    for (const modelName of uniqueModels) {
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          console.log(`[AI Service] Trying model=${modelName}, attempt=${attempt + 1}/${maxRetries}`);
+          const model = this.genAI.getGenerativeModel({ model: modelName });
+          const result = await model.generateContent({
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: prompt }],
+              },
+            ],
+          });
+          const response = await result.response;
+          const text = response.text();
+          if (text && text.trim().length > 0) {
+            console.log(`[AI Service] Success with model=${modelName}`);
+            return text;
+          }
+          throw new Error(`Empty response from model ${modelName}`);
+        } catch (err: any) {
+          lastError = err;
+          const status = err?.status || err?.response?.status;
+          const msg = String(err?.message || "");
+          const isOverloaded = status === 503 || msg.includes("overloaded");
+          const isModelNotFound =
+            status === 404 ||
+            msg.includes("is not found for API version") ||
+            msg.includes("is not supported for generateContent");
+
+          console.error(
+            `[AI Service] Model=${modelName} failed (attempt ${attempt + 1}/${maxRetries}) status=${status ?? "unknown"} message=${msg}`
+          );
+
+          if (isModelNotFound) {
+            // Try next model immediately.
+            break;
+          }
+
+          if (attempt < maxRetries - 1 && isOverloaded) {
+            const delay = baseDelayMs * Math.pow(2, attempt);
+            await new Promise((res) => setTimeout(res, delay));
+            continue;
+          }
+
+          // Non-retriable for this model; move to next model.
+          break;
         }
-        // If not retriable or last attempt, rethrow
-        throw err;
       }
     }
-    throw new Error("Failed to generate content after retries");
+
+    const finalMessage =
+      lastError instanceof Error
+        ? lastError.message
+        : "Failed to generate content after trying all models";
+    throw new Error(finalMessage);
+  }
+
+  private getQuotaAwareFallbackAnswer(
+    questionText: string,
+    language: string
+  ): string {
+    const q = questionText.toLowerCase();
+
+    if (q.includes("javascript")) {
+      return "JavaScript is a programming language used to make websites interactive. It can update content on a page, handle user actions like clicks, validate forms, and call APIs without reloading the page. Key JavaScript concepts to learn are variables, functions, objects, arrays, DOM manipulation, async/await, and event handling. In modern development, JavaScript is used for frontend frameworks like React and backend development with Node.js.";
+    }
+
+    if (q.includes("react")) {
+      return "React is a JavaScript library for building user interfaces using reusable components. It uses a virtual DOM to update UI efficiently and supports one-way data flow for predictable state management. Important React concepts are components, props, state, hooks (like useState and useEffect), conditional rendering, and routing. React is commonly used to build scalable single-page web applications.";
+    }
+
+    if (q.includes("html") || q.includes("css")) {
+      return "HTML provides the structure of a webpage, while CSS controls its styling and layout. HTML defines elements like headings, paragraphs, links, images, and forms. CSS is used for colors, spacing, typography, responsiveness, and animations. Together, HTML and CSS form the foundation of frontend web development.";
+    }
+
+    return "I could not reach the external AI model due current API quota limits, but here is a quick explanation: break this topic into definition, core concepts, practical examples, and one small project. If you share your exact level (beginner/intermediate) I can give a step-by-step learning plan with examples and practice tasks.";
   }
 
   private createSystemPrompt(question: Question): string {

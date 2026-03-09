@@ -61,8 +61,7 @@ export default function TeacherLoginPage() {
       if (result.success && result.data) {
         localStorage.setItem("classless_user", JSON.stringify(result.data));
         toast.success("Login successful!");
-        // Redirect teacher to teacher dashboard section
-        router.push("/dashboard");
+        router.push("/");
       } else {
         toast.error("Teacher not found. Please register first.");
         router.push("/auth/register/teacher");

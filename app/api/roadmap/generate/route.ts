@@ -89,6 +89,12 @@ export async function POST(request: NextRequest) {
           careerPersona: fixed.careerPersona,
           recommendedCareer: fixed.canonicalRole,
           roadmap: fixed.roadmap,
+          requiredSkills: fixed.requiredSkills || {
+            core: [],
+            advanced: [],
+            industry: [],
+          },
+          tools: fixed.tools || [],
           estimatedTimeline: fixed.estimatedTimeline,
           toolsToLearn: fixed.toolsToLearn,
           certifications: fixed.certifications,
@@ -131,6 +137,12 @@ export async function POST(request: NextRequest) {
         stages: generated.roadmap,
         stageDetails: buildStageDetails(generated.roadmap),
         readinessScore: fixed ? 60 : 40,
+        requiredSkills: generated.requiredSkills || {
+          core: [],
+          advanced: [],
+          industry: [],
+        },
+        tools: generated.tools || [],
         estimatedTimeline: generated.estimatedTimeline || "",
         toolsToLearn: generated.toolsToLearn || [],
         certifications: generated.certifications || [],
@@ -153,7 +165,12 @@ export async function POST(request: NextRequest) {
 
     await UserModel.updateOne(
       { _id: user._id },
-      { $set: { assessmentCompleted: true } }
+      {
+        $set: {
+          assessmentCompleted: true,
+          selectedRole: generated.recommendedCareer,
+        },
+      }
     );
 
     await logUserActivity(String(user._id), "ROADMAP_GENERATED", {
@@ -170,6 +187,12 @@ export async function POST(request: NextRequest) {
         careerPersona: generated.careerPersona,
         suggestedCareerPath: generated.recommendedCareer,
         roadmap: generated.roadmap,
+        requiredSkills: generated.requiredSkills || {
+          core: [],
+          advanced: [],
+          industry: [],
+        },
+        tools: generated.tools || [],
         estimatedTimeline: generated.estimatedTimeline || "",
         toolsToLearn: generated.toolsToLearn || [],
         certifications: generated.certifications || [],

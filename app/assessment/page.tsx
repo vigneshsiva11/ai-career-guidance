@@ -162,6 +162,9 @@ export default function AssessmentPage() {
     if (q.includes("current skill level")) {
       return "Example: Beginner - I know the basics and need guided practice.";
     }
+    if (q.includes("what skills do you believe are your strongest")) {
+      return "Example: Problem-solving, communication, teamwork, and JavaScript fundamentals.";
+    }
     if (q.includes("how many hours per week") || q.includes("how much time can you commit weekly")) {
       return "Example: 8-10 hours per week.";
     }

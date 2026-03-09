@@ -17,56 +17,174 @@ import {
   MapPin,
   Brain,
   Briefcase,
+  Target,
   ArrowRight,
   CheckCircle2,
+  UserCircle2,
+  X,
 } from "lucide-react";
-import type { User, Question } from "@/lib/types";
+import type { User } from "@/lib/types";
+import { toast } from "sonner";
+
+interface AIQuestionHistoryItem {
+  id: string;
+  question: string;
+  answer: string;
+  createdAt: string;
+  modelUsed?: string;
+  category?: string;
+}
+
+type SkillLevel = "Beginner" | "Intermediate" | "Advanced";
+
+interface ProgressTrackerData {
+  selectedRole: string;
+  hasSelectedRole: boolean;
+  roleSkills: string[];
+  profile: {
+    educationLevel: string;
+    fieldOfStudy: string;
+    experienceLevel: string;
+    learningGoal: string;
+    skillLevels: Record<string, SkillLevel>;
+  };
+  analysis: {
+    strongSkills: string[];
+    weakSkills: string[];
+    missingSkills: string[];
+    recommendedSkills: string[];
+    recommendedActions: string[];
+    metrics: {
+      domainExpertise: number;
+      practicalExposure: number;
+      communication: number;
+      executionDiscipline: number;
+    };
+    generatedAt: string | null;
+    source: string;
+  } | null;
+}
+
+const EDUCATION_OPTIONS = [
+  "High School",
+  "Diploma",
+  "B.Tech",
+  "B.Sc",
+  "MCA",
+  "Working Professional",
+];
+
+const FIELD_OPTIONS = [
+  "Computer Science",
+  "Information Technology",
+  "Mechanical Engineering",
+  "Business",
+  "Electronics",
+  "Other",
+];
+
+const EXPERIENCE_OPTIONS = [
+  "1st Year",
+  "2nd Year",
+  "3rd Year",
+  "Final Year",
+  "Graduate",
+  "1-3 Years Experience",
+  "3-5 Years Experience",
+];
+
+const GOAL_OPTIONS = [
+  "Get Internship",
+  "Get First Job",
+  "Switch Career",
+  "Improve Skills",
+];
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [aiQuestionHistory, setAiQuestionHistory] = useState<AIQuestionHistoryItem[]>([]);
+  const [expandedAiIds, setExpandedAiIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [assessmentCompleted, setAssessmentCompleted] = useState(false);
-  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [progressData, setProgressData] = useState<ProgressTrackerData | null>(
+    null
+  );
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [showProfileUpdatedPopup, setShowProfileUpdatedPopup] = useState(false);
+  const [profileModalStep, setProfileModalStep] = useState<1 | 2>(1);
+  const [profileForm, setProfileForm] = useState({
+    educationLevel: "",
+    fieldOfStudy: "",
+    experienceLevel: "",
+    learningGoal: "",
+  });
+  const [skillLevels, setSkillLevels] = useState<Record<string, SkillLevel>>({});
   const router = useRouter();
 
   useEffect(() => {
-    const userData = localStorage.getItem("classless_user");
-    if (!userData) {
-      router.push("/login");
-      return;
-    }
+    const bootstrap = async () => {
+      try {
+        const parseJsonSafely = async (response: Response) => {
+          const raw = await response.text();
+          try {
+            return JSON.parse(raw);
+          } catch {
+            throw new Error(
+              `Invalid JSON response (status ${response.status}).`
+            );
+          }
+        };
 
-    const parsedUser = JSON.parse(userData);
-    setUser(parsedUser);
+        const meResponse = await fetch("/api/auth/me", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (meResponse.status === 401) {
+          router.push("/auth/signin");
+          return;
+        }
 
-    fetchUserQuestions(parsedUser.id);
-    fetchAssessmentStatus(parsedUser.id);
-    fetchRecentActivities(parsedUser.id);
-  }, [router]);
+        const meResult = await parseJsonSafely(meResponse);
+        if (!meResult.success || !meResult.data) {
+          router.push("/auth/signin");
+          return;
+        }
 
-  const fetchUserQuestions = async (userId: number) => {
-    try {
-      const response = await fetch(`/api/questions?user_id=${userId}`);
-      const result = await response.json();
-      if (result.success) {
-        const teacherIdsKey = `classless_teacher_questions_${userId}`;
-        let teacherIds: number[] = [];
-        try {
-          const stored = localStorage.getItem(teacherIdsKey);
-          if (stored) teacherIds = JSON.parse(stored);
-        } catch {}
-        const aiOnly = (result.data as Question[]).filter(
-          (q: Question) => !teacherIds.includes(q.id)
-        );
-        setQuestions(aiOnly);
+        const me = meResult.data;
+        const normalizedUser: User = {
+          id: me.legacyId ?? 0,
+          phone_number: "",
+          name: me.name,
+          user_type: me.role || "student",
+          preferred_language: "en",
+          location: "",
+          education_level: "",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        setUser(normalizedUser);
+        localStorage.setItem("classless_user", JSON.stringify(normalizedUser));
+
+        if (normalizedUser.id) {
+          fetchAssessmentStatus(normalizedUser.id);
+        }
+        fetchProgressTracker();
+        fetchAIQuestionHistory();
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Dashboard auth bootstrap failed:", error);
+        router.push("/auth/signin");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching questions:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    bootstrap();
+  }, [router]);
 
   const fetchAssessmentStatus = async (userId: number) => {
     try {
@@ -80,25 +198,85 @@ export default function DashboardPage() {
     }
   };
 
-  const fetchRecentActivities = async (userId: number) => {
+  const fetchAIQuestionHistory = async () => {
     try {
-      const response = await fetch(`/api/activity?user_id=${userId}&limit=10`);
+      const response = await fetch("/api/questions?history=true", {
+        credentials: "include",
+      });
       const result = await response.json();
-      if (result.success) setRecentActivities(result.data || []);
+      if (result.success) {
+        setAiQuestionHistory(result.data || []);
+      }
     } catch (error) {
-      console.error("Error fetching recent activities:", error);
+      console.error("Error fetching AI question history:", error);
     }
   };
 
-  const navigateToAskTeacherIfTeacherQuestion = (questionId: number) => {
+  const fetchProgressTracker = async () => {
     try {
-      const teacherIdsKey = `classless_teacher_questions_${user?.id}`;
-      const stored = teacherIdsKey ? localStorage.getItem(teacherIdsKey) : null;
-      const teacherIds: number[] = stored ? JSON.parse(stored) : [];
-      if (teacherIds.includes(questionId)) {
-        router.push(`/ask-teacher?q=${questionId}`);
+      const response = await fetch("/api/profile/setup", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+      const result = await response.json();
+      if (result.success && result.data) {
+        setProgressData(result.data);
+        setProfileForm({
+          educationLevel: result.data.profile?.educationLevel || "",
+          fieldOfStudy: result.data.profile?.fieldOfStudy || "",
+          experienceLevel: result.data.profile?.experienceLevel || "",
+          learningGoal: result.data.profile?.learningGoal || "",
+        });
+        setSkillLevels(result.data.profile?.skillLevels || {});
       }
-    } catch {}
+    } catch (error) {
+      console.error("Error fetching progress tracker:", error);
+    }
+  };
+
+  const saveCareerProfile = async () => {
+    try {
+      setIsSavingProfile(true);
+      setProfileError("");
+      const completedSkills = Object.entries(skillLevels)
+        .filter(([, level]) => level === "Intermediate" || level === "Advanced")
+        .map(([skill]) => skill);
+      const response = await fetch("/api/user/update-profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          ...profileForm,
+          profileSkills: skillLevels,
+          completedSkills,
+        }),
+      });
+      const result = await response.json();
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to save profile");
+      }
+      await fetchProgressTracker();
+      toast.success("Career profile updated successfully.");
+      setShowProfileUpdatedPopup(true);
+      window.setTimeout(() => setShowProfileUpdatedPopup(false), 3000);
+      setIsProfileModalOpen(false);
+      setProfileModalStep(1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to save profile";
+      setProfileError(message);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const toggleAiHistoryItem = (id: string) => {
+    setExpandedAiIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const handleLogout = () => {
@@ -133,6 +311,13 @@ export default function DashboardPage() {
   }
 
   if (!user) return null;
+
+  const hasProfileAnalysis = Boolean(progressData?.analysis);
+  const openProfileModal = () => {
+    setProfileError("");
+    setProfileModalStep(1);
+    setIsProfileModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -179,30 +364,106 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {user.user_type === "student" && assessmentCompleted && (
-          <Card className="mb-10 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-            <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500" />
-            <CardHeader className="space-y-3">
-              <CardTitle className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                </span>
-                Career Assessment Completed
-              </CardTitle>
-              <CardDescription className="text-slate-600">
-                Your personalized strengths and roadmap are ready.
+        {user.user_type === "student" && (
+          <Card className="rounded-2xl border border-slate-200 bg-white shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-slate-900">Selected Career Role</CardTitle>
+              <CardDescription>
+                Career role selected during assessment and roadmap generation.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-lg font-semibold text-slate-900">
+                {progressData?.hasSelectedRole
+                  ? progressData.selectedRole
+                  : "No role selected yet"}
+              </div>
+              {progressData?.hasSelectedRole ? (
+                hasProfileAnalysis ? (
+                  <Button
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => router.push("/progress-tracker")}
+                  >
+                    Progress Tracker
+                  </Button>
+                ) : (
+                  <span className="text-sm text-slate-500">
+                    Complete profile setup to unlock progress tracker
+                  </span>
+                )
+              ) : (
                 <Button
-                  onClick={() => router.push("/roadmap")}
-                  className="rounded-full bg-indigo-600 text-white shadow-md transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1 hover:bg-indigo-700 hover:shadow-lg"
+                  className="rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
+                  onClick={() => router.push("/assessment")}
                 >
-                See Your Strength & Roadmap
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
+                  Select Career Role
+                </Button>
+              )}
             </CardContent>
           </Card>
+        )}
+
+        {user.user_type === "student" && progressData?.hasSelectedRole && (
+          <section className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                    <UserCircle2 className="h-6 w-6 text-blue-600" />
+                  </span>
+                  {!hasProfileAnalysis && (
+                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+                      Required
+                    </Badge>
+                  )}
+                </div>
+                <CardTitle className="mt-3 text-lg font-bold tracking-tight text-slate-900">
+                  Career Profile Setup
+                </CardTitle>
+                <CardDescription className="text-slate-600">
+                  Set up your education and skill profile to unlock AI-powered career progress tracking.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={openProfileModal}
+                  className="rounded-[10px] bg-gradient-to-r from-blue-600 to-violet-600 px-6 py-3 font-semibold text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:from-blue-500 hover:to-violet-500 hover:shadow-[0_0_20px_rgba(99,102,241,0.35)]"
+                >
+                  {hasProfileAnalysis ? "Update Profile" : "Set Up Profile"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl">
+              <CardHeader className="pb-3">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                </span>
+                <CardTitle className="mt-3 text-lg font-bold tracking-tight text-slate-900">
+                  Career Assessment {assessmentCompleted ? "Completed" : "Pending"}
+                </CardTitle>
+                <CardDescription className="text-slate-600">
+                  {assessmentCompleted
+                    ? "Your strengths and personalized career roadmap are ready."
+                    : "Complete your assessment to generate strengths and roadmap insights."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() =>
+                    router.push(assessmentCompleted ? "/roadmap" : "/assessment")
+                  }
+                  className="rounded-[10px] bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3 font-semibold text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:from-emerald-500 hover:to-teal-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+                >
+                  {assessmentCompleted
+                    ? "View Strengths & Roadmap"
+                    : "Complete Assessment"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </section>
         )}
 
         <section className="relative mb-10 overflow-hidden rounded-3xl border border-white/50 bg-white/60 p-6 shadow-xl backdrop-blur-md md:p-8">
@@ -346,91 +607,299 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </Link>
+
+          {user.user_type === "student" && hasProfileAnalysis && (
+            <Link href="/progress-tracker">
+              <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl cursor-pointer">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100">
+                      <Target className="h-5 w-5 text-indigo-600" />
+                    </span>
+                    <CardTitle className="text-lg font-bold tracking-tight text-slate-900">
+                      Progress Tracker
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-slate-600">
+                    View AI skill gap analysis and career readiness predictions
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
           </div>
         </section>
 
-        {user.user_type === "student" && recentActivities.length > 0 && (
-          <Card className="mb-8 rounded-2xl border border-slate-200 bg-white shadow-lg">
-            <CardHeader>
-              <CardTitle className="font-bold tracking-tight text-slate-900">Recent Activity</CardTitle>
-              <CardDescription className="text-slate-600">Your latest tracked actions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {recentActivities.map((activity, index) => (
-                  <div key={activity._id || index} className="rounded-xl border border-slate-200 bg-white p-3">
-                    <p className="text-sm font-medium text-slate-900">{activity.activityType}</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {new Date(activity.timestamp).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <Card className="rounded-2xl border border-slate-200 bg-white shadow-lg">
-          <CardHeader className="border-t border-slate-200 pt-8">
+          <CardHeader>
             <CardTitle className="flex items-center space-x-2 font-bold tracking-tight text-slate-900">
-              <MessageSquare className="h-5 w-5" />
-              <span>Your Recent Questions</span>
+              <Brain className="h-5 w-5" />
+              <span>My AI Questions</span>
             </CardTitle>
             <CardDescription className="text-slate-600">
-              {user.user_type === "student"
-                ? "Questions you've asked recently"
-                : "Questions you've answered recently"}
+              Your previously asked AI questions and answers
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {questions.length === 0 ? (
+            {aiQuestionHistory.length === 0 ? (
               <div className="text-center py-8">
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="mb-4 text-slate-600">
-                  {user.user_type === "student"
-                    ? "You haven't asked any questions yet."
-                    : "No questions to show."}
+                <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-slate-600">
+                  No AI questions yet. Ask your first question to build history.
                 </p>
-                {user.user_type === "student" && (
-                  <Link href="/ask">
-                    <Button>Ask Your First Question</Button>
-                  </Link>
-                )}
               </div>
             ) : (
-              <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-                {questions.map((question) => (
-                  <div
-                    key={question.id}
-                    className="rounded-xl border border-slate-200 bg-white p-4 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg"
-                    onClick={() => navigateToAskTeacherIfTeacherQuestion(question.id)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="line-clamp-2 font-medium text-slate-900">{question.question_text}</p>
-                      <Badge
-                        variant={
-                          question.status === "answered"
-                            ? "default"
-                            : question.status === "pending"
-                            ? "secondary"
-                            : "destructive"
-                        }
-                      >
-                        {question.status}
-                      </Badge>
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {aiQuestionHistory.map((item) => {
+                  const expanded = expandedAiIds.has(item.id);
+                  const preview =
+                    item.answer.length > 140
+                      ? `${item.answer.slice(0, 140)}...`
+                      : item.answer;
+                  return (
+                    <div
+                      key={item.id}
+                      className="rounded-xl border border-slate-200 bg-white p-4 cursor-pointer transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-lg"
+                      onClick={() => toggleAiHistoryItem(item.id)}
+                    >
+                      <p className="font-medium text-slate-900">{item.question}</p>
+                      <p className="mt-2 text-sm text-slate-600 whitespace-pre-wrap">
+                        {expanded ? item.answer : preview}
+                      </p>
+                      <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                        <span>{new Date(item.createdAt).toLocaleString()}</span>
+                        <span>{expanded ? "Click to collapse" : "Click to expand"}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-sm text-slate-500">
-                      <span>{question.language.toUpperCase()}</span>
-                      <span>{new Date(question.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {isProfileModalOpen && progressData?.hasSelectedRole && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm transition-all duration-300">
+          <div className="w-full max-w-4xl rounded-2xl border border-slate-200 bg-white shadow-2xl transition-all duration-300">
+            <div className="flex items-start justify-between border-b border-slate-200 p-6">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Career Profile Setup</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  Tell us about your background and current skill strengths to generate AI-powered progress insights.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                onClick={() => {
+                  setIsProfileModalOpen(false);
+                  setProfileModalStep(1);
+                  setProfileError("");
+                }}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="border-b border-slate-200 px-6 py-4">
+              <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <span className={profileModalStep === 1 ? "text-indigo-600" : ""}>Step 1 - Background</span>
+                <span className={profileModalStep === 2 ? "text-indigo-600" : ""}>Step 2 - Skills</span>
+              </div>
+              <div className="h-2 rounded-full bg-slate-200">
+                <div
+                  className="h-2 rounded-full bg-gradient-to-r from-blue-600 to-violet-600 transition-all duration-300"
+                  style={{ width: profileModalStep === 1 ? "50%" : "100%" }}
+                />
+              </div>
+            </div>
+
+            <div className="max-h-[68vh] overflow-y-auto p-6">
+              {profileModalStep === 1 && (
+                <div className="space-y-5">
+                  <h4 className="text-base font-semibold text-slate-900">Education & Background</h4>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Education Level</label>
+                      <select
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                        value={profileForm.educationLevel}
+                        onChange={(e) =>
+                          setProfileForm((prev) => ({
+                            ...prev,
+                            educationLevel: e.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Select education</option>
+                        {EDUCATION_OPTIONS.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Field of Study</label>
+                      <select
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                        value={profileForm.fieldOfStudy}
+                        onChange={(e) =>
+                          setProfileForm((prev) => ({
+                            ...prev,
+                            fieldOfStudy: e.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Select field</option>
+                        {FIELD_OPTIONS.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Current Year / Experience</label>
+                      <select
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                        value={profileForm.experienceLevel}
+                        onChange={(e) =>
+                          setProfileForm((prev) => ({
+                            ...prev,
+                            experienceLevel: e.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Select current year/experience</option>
+                        {EXPERIENCE_OPTIONS.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Learning Goal</label>
+                      <select
+                        className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                        value={profileForm.learningGoal}
+                        onChange={(e) =>
+                          setProfileForm((prev) => ({
+                            ...prev,
+                            learningGoal: e.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Select goal</option>
+                        {GOAL_OPTIONS.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {profileModalStep === 2 && (
+                <div className="space-y-5">
+                  <h4 className="text-base font-semibold text-slate-900">
+                    Current Skill Strengths ({progressData.selectedRole})
+                  </h4>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {progressData.roleSkills.map((skill) => (
+                      <div key={skill} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <div className="mb-2 text-sm font-medium text-slate-800">{skill}</div>
+                        <select
+                          className="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm"
+                          value={skillLevels[skill] || "Beginner"}
+                          onChange={(e) =>
+                            setSkillLevels((prev) => ({
+                              ...prev,
+                              [skill]: e.target.value as SkillLevel,
+                            }))
+                          }
+                        >
+                          <option value="Beginner">Beginner</option>
+                          <option value="Intermediate">Intermediate</option>
+                          <option value="Advanced">Advanced</option>
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {profileError && <p className="mt-4 text-sm text-rose-600">{profileError}</p>}
+            </div>
+
+            <div className="flex items-center justify-between border-t border-slate-200 p-6">
+              <Button
+                variant="outline"
+                className="rounded-[10px]"
+                onClick={() => {
+                  if (profileModalStep === 1) {
+                    setIsProfileModalOpen(false);
+                    setProfileError("");
+                    return;
+                  }
+                  setProfileModalStep(1);
+                }}
+              >
+                {profileModalStep === 1 ? "Cancel" : "Back"}
+              </Button>
+
+              <div className="flex items-center gap-3">
+                {profileModalStep === 1 ? (
+                  <Button
+                    className="rounded-[10px] bg-gradient-to-r from-blue-600 to-violet-600 px-6 font-semibold text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:from-blue-500 hover:to-violet-500 hover:shadow-[0_0_20px_rgba(99,102,241,0.35)]"
+                    onClick={() => setProfileModalStep(2)}
+                  >
+                    Next: Skills
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={saveCareerProfile}
+                    disabled={isSavingProfile}
+                    className="rounded-[10px] bg-gradient-to-r from-blue-600 to-violet-600 px-6 font-semibold text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:from-blue-500 hover:to-violet-500 hover:shadow-[0_0_20px_rgba(99,102,241,0.35)]"
+                  >
+                    {isSavingProfile ? "Saving..." : "Save Profile"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showProfileUpdatedPopup && (
+        <div className="fixed right-6 top-20 z-[70] w-full max-w-sm rounded-xl border border-emerald-200 bg-white p-4 shadow-xl">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-900">Profile Updated</p>
+              <p className="mt-1 text-sm text-slate-600">
+                Your career profile was updated successfully.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              onClick={() => setShowProfileUpdatedPopup(false)}
+              aria-label="Close notification"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

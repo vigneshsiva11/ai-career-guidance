@@ -57,10 +57,33 @@ const nextBin = path.join(
   "next"
 );
 
-const child = spawn(process.execPath, [nextBin, "dev", "-p", String(port)], {
-  cwd: root,
-  stdio: "inherit",
-  shell: false,
-});
+function startNextDev() {
+  if (!fs.existsSync(nextBin)) {
+    console.error("[dev] next binary not found. Run `npm install` first.");
+    process.exit(1);
+  }
 
-child.on("exit", (code) => process.exit(code ?? 0));
+  const primary = spawn(process.execPath, [nextBin, "dev", "-p", String(port)], {
+    cwd: root,
+    stdio: "inherit",
+    shell: false,
+  });
+
+  primary.on("error", (error) => {
+    console.warn(
+      `[dev] primary spawn failed (${error.code || "unknown"}). Falling back to shell launcher.`
+    );
+
+    const fallback = spawn("npx", ["next", "dev", "-p", String(port)], {
+      cwd: root,
+      stdio: "inherit",
+      shell: true,
+    });
+
+    fallback.on("exit", (code) => process.exit(code ?? 0));
+  });
+
+  primary.on("exit", (code) => process.exit(code ?? 0));
+}
+
+startNextDev();

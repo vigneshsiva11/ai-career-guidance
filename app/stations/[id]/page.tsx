@@ -219,44 +219,6 @@ export default function StationDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>What's happening at this station</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-blue-100 p-2 rounded-full">
-                      <Users className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">15 students learned today</p>
-                      <p className="text-xs text-gray-500">Most popular subject: Mathematics</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-green-100 p-2 rounded-full">
-                      <BookOpen className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">127 questions answered this week</p>
-                      <p className="text-xs text-gray-500">Average response time: 2.3 seconds</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-purple-100 p-2 rounded-full">
-                      <Star className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">New volunteer joined</p>
-                      <p className="text-xs text-gray-500">Priya Singh - Computer Science tutor</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Sidebar */}

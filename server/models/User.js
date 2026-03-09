@@ -11,8 +11,15 @@ const UserSchema = new mongoose.Schema(
       default: "student",
       required: true,
     },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
     assessmentCompleted: { type: Boolean, default: false },
     lastLoginAt: { type: Date, default: null },
+    selectedRole: { type: String, default: "" },
+    profileSkills: { type: Map, of: String, default: {} },
 
     // Backward-compatible fields used by existing UI
     phone_number: { type: String, unique: true, sparse: true },

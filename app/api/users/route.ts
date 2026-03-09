@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     const body: CreateUserRequest & {
       password?: string;
       email?: string;
+      teacher_email?: string;
       role?: string;
       roll_number?: string;
     } = await request.json();
@@ -47,12 +48,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const email = String(body.email || body.teacher_email || "").trim();
+    if (body.password && (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Valid email is required" },
+        { status: 400 }
+      );
+    }
+
+    const educationLevel = String(body.education_level || "").trim();
+    if (body.user_type === "student" && !educationLevel) {
+      return NextResponse.json<ApiResponse<null>>(
+        { success: false, error: "Education Level is required" },
+        { status: 400 }
+      );
+    }
+
     await connectDatabase();
 
     // Check if user already exists by phone/email
     const existingUser = await getUserByPhone(body.phone_number);
-    const existingByEmail = body.email
-      ? await UserModel.findOne({ email: body.email.toLowerCase() })
+    const existingByEmail = email
+      ? await UserModel.findOne({ email: email.toLowerCase() })
       : null;
 
     if (existingUser || existingByEmail) {
@@ -80,7 +97,7 @@ export async function POST(request: NextRequest) {
       preferred_language: body.preferred_language || "en",
       location: body.location,
       education_level: body.education_level,
-      email: body.email,
+      email,
       password: hashedPassword,
     });
 
@@ -141,3 +158,8 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
+
+
+

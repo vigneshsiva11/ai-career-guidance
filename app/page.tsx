@@ -52,16 +52,28 @@ export default function HomePage() {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
+        const parseJsonSafely = async (response: Response) => {
+          const raw = await response.text();
+          try {
+            return JSON.parse(raw);
+          } catch {
+            throw new Error(
+              `Invalid JSON response (status ${response.status}).`
+            );
+          }
+        };
+
         const meResponse = await fetch("/api/auth/me", {
           method: "GET",
           credentials: "include",
+          cache: "no-store",
         });
         if (meResponse.status === 401) {
           setAuthUser(null);
           setShowAssessmentPopup(false);
           return;
         }
-        const meResult = await meResponse.json();
+        const meResult = await parseJsonSafely(meResponse);
         if (!meResult.success || !meResult.data) {
           setAuthUser(null);
           setShowAssessmentPopup(false);
@@ -193,7 +205,7 @@ export default function HomePage() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center rounded-full border border-slate-200 bg-white p-1 shadow-md">
-              <Link href="/auth/register/student">
+              <Link href="/ask">
                 <Button
                   variant={pathname === "/ask" ? "default" : "outline"}
                   size="sm"
@@ -322,7 +334,7 @@ export default function HomePage() {
             <div className="lg:hidden border-t border-slate-200 bg-white/90 backdrop-blur-md">
               <div className="space-y-1 px-2 pt-2 pb-3">
                 <Link
-                  href="/auth/register/student"
+                  href="/ask"
                   className="block rounded-xl px-3 py-2 text-base font-medium text-slate-700 transition-all duration-300 ease-in-out hover:bg-slate-50"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
