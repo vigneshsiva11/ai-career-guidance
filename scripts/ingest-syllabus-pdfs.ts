@@ -4,7 +4,7 @@
 
 import fs from "fs";
 import path from "path";
-import pdfParse from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 import { contentManagementService } from "../lib/content-management-service";
 import { ocrService } from "../lib/ocr-service";
 
@@ -33,7 +33,9 @@ function chunkText(text: string, maxChars = 1200): string[] {
 
 async function extractPdfText(filePath: string): Promise<string> {
   const dataBuffer = fs.readFileSync(filePath);
-  const data = await pdfParse(dataBuffer);
+  const parser = new PDFParse({ data: new Uint8Array(dataBuffer) });
+  const data = await parser.getText();
+  await parser.destroy();
   if (data.text && data.text.trim().length > 50) return data.text;
   // Fallback to OCR via images is omitted; for scanned PDFs, users can convert pages to images and use OCR
   return data.text || "";

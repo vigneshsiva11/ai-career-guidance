@@ -29,6 +29,7 @@ function killPortWindows(targetPort) {
 function cleanCaches() {
   const targets = [
     path.join(root, ".next"),
+    path.join(root, ".next-dev"),
     path.join(root, "node_modules", ".cache"),
   ];
   for (const target of targets) {

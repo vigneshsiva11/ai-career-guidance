@@ -109,7 +109,7 @@ export default function HomePage() {
     });
 
     // Hard fallback: never leave content hidden.
-    const fallbackTimer = window.setTimeout(() => {
+    const fallbackTimer = globalThis.setTimeout(() => {
       sections.forEach((section) => {
         section.setAttribute("data-reveal-state", "visible");
       });
@@ -119,7 +119,7 @@ export default function HomePage() {
       sections.forEach((section) => {
         section.setAttribute("data-reveal-state", "visible");
       });
-      window.clearTimeout(fallbackTimer);
+      globalThis.clearTimeout(fallbackTimer);
       return;
     }
 
@@ -137,7 +137,7 @@ export default function HomePage() {
 
     sections.forEach((section) => observer.observe(section));
     return () => {
-      window.clearTimeout(fallbackTimer);
+      globalThis.clearTimeout(fallbackTimer);
       observer.disconnect();
     };
   }, []);

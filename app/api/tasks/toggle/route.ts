@@ -53,11 +53,11 @@ export async function POST(request: NextRequest) {
     const currentlyCompleted = existingTasks.includes(taskId);
     const targetCompleted = completed === null ? !currentlyCompleted : completed;
 
-    const update = targetCompleted
+    const update: any = targetCompleted
       ? { $addToSet: { completedTasks: taskId, completedSteps: taskId } }
       : { $pull: { completedTasks: taskId, completedSteps: taskId } };
 
-    await CareerProgressModel.collection.updateOne(
+    await (CareerProgressModel.collection as any).updateOne(
       { userId: user._id },
       {
         ...update,

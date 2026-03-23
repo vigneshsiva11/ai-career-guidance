@@ -1,4 +1,18 @@
-export type Lang = "en" | "hi" | "ta" | "pa";
+export type Lang =
+  | "en"
+  | "hi"
+  | "ta"
+  | "pa"
+  | "bn"
+  | "te"
+  | "mr"
+  | "gu"
+  | "kn"
+  | "ml"
+  | "ur"
+  | "or"
+  | "as"
+  | "sa";
 
 type Dict = Record<string, string>;
 
@@ -223,7 +237,7 @@ const ta: Dict = {
   footer_copyright: "டிஜிட்டல் கல்வி பிரிவினையை நிறைவேற்றுதல்.",
 };
 
-const dictMap: Record<Lang, Dict> = { en, pa, hi, ta };
+const dictMap: Partial<Record<Lang, Dict>> = { en, pa, hi, ta };
 
 export function t(lang: Lang, key: string, fallback?: string) {
   const d = dictMap[lang] || en;

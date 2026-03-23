@@ -2,9 +2,13 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getQuestionById, getAnswersByQuestion } from "@/lib/database"
 import type { ApiResponse, Question, Answer } from "@/lib/types"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
-    const questionId = Number.parseInt(params.id)
+    const { id } = await context.params
+    const questionId = Number.parseInt(id)
 
     if (Number.isNaN(questionId)) {
       return NextResponse.json<ApiResponse<null>>(

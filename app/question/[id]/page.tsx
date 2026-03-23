@@ -223,7 +223,7 @@ export default function QuestionDetailPage() {
                     <span>{new Date(question.created_at).toLocaleDateString()}</span>
                   </div>
                   <Badge variant="secondary">{question.language.toUpperCase()}</Badge>
-                  <Badge variant="outline">{question.difficulty_level}</Badge>
+                  <Badge variant="outline">{question.difficulty_level || "medium"}</Badge>
                 </div>
               </div>
               <Badge

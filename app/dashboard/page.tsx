@@ -21,6 +21,7 @@ import {
   ArrowRight,
   CheckCircle2,
   UserCircle2,
+  FileText,
   X,
 } from "lucide-react";
 import type { User } from "@/lib/types";
@@ -517,6 +518,28 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <CardDescription className="text-slate-600">Help students by answering their questions</CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
+
+          {user.user_type === "student" && (
+            <Link href="/resume-optimizer">
+              <Card className="h-full rounded-2xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ease-in-out hover:-translate-y-2 hover:scale-105 hover:shadow-2xl cursor-pointer">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100">
+                      <FileText className="h-5 w-5 text-sky-600" />
+                    </span>
+                    <CardTitle className="text-lg font-bold tracking-tight text-slate-900">
+                      Resume Optimization
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-slate-600">
+                    Analyze your resume using AI, detect missing skills, improve formatting, and find matched jobs.
+                  </CardDescription>
                 </CardContent>
               </Card>
             </Link>

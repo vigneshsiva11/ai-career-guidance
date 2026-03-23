@@ -153,7 +153,8 @@ export default function TeacherQuizProgressPage() {
     const avgScore =
       completed.length > 0
         ? completed.reduce(
-            (sum, p) => sum + (p.score / p.total_questions) * 100,
+            (sum, p) =>
+              sum + ((p.score || 0) / Math.max(1, p.total_questions || 1)) * 100,
             0
           ) / completed.length
         : 0;
@@ -470,7 +471,7 @@ export default function TeacherQuizProgressPage() {
                       <div className="bg-blue-50 p-3 rounded-lg">
                         <p className="text-sm text-blue-800">
                           Student is currently taking this quiz. Started at{" "}
-                          {new Date(progress.completed_at).toLocaleString()}
+                          {new Date(progress.completed_at || progress.attended_at).toLocaleString()}
                         </p>
                       </div>
                     )}
@@ -479,7 +480,7 @@ export default function TeacherQuizProgressPage() {
                       <div className="bg-red-50 p-3 rounded-lg">
                         <p className="text-sm text-red-800">
                           Quiz was abandoned. Started at{" "}
-                          {new Date(progress.completed_at).toLocaleString()}
+                          {new Date(progress.completed_at || progress.attended_at).toLocaleString()}
                         </p>
                       </div>
                     )}

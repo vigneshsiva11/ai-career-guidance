@@ -24,6 +24,9 @@ export interface Subject {
 export interface Question {
   id: number;
   user_id: number;
+  student_id?: number;
+  subject_id?: number;
+  difficulty_level?: "easy" | "medium" | "hard" | string;
   question_text: string;
   question_type: "text" | "image" | "voice";
   image_url?: string;
@@ -75,24 +78,41 @@ export interface QuizAttendance {
   level: string;
   attended_at: string;
   completed_at?: string;
-  status: "attended" | "completed" | "abandoned";
+  status: "attended" | "completed" | "abandoned" | "in_progress";
   score?: number;
   total_questions?: number;
   completion_time?: number;
 }
 
 export interface Scholarship {
-  id: number;
-  title: string;
+  id: number | string;
+  title?: string;
+  name?: string;
+  provider?: string;
+  category?: string;
   description?: string;
   eligibility_criteria?: string;
   amount?: number;
   deadline?: string;
   application_url?: string;
+  applicationUrl?: string;
+  eligibleStates: string[];
+  minGrade: number;
+  maxGrade: number;
+  requirements: string[];
   target_audience?: string;
   location?: string;
-  is_active: boolean;
-  created_at: string;
+  is_active?: boolean;
+  created_at?: string;
+}
+
+export interface ScholarshipApplication {
+  id: string;
+  userId: string;
+  scholarshipId: string;
+  status: "applied" | "under_review" | "approved" | "rejected";
+  appliedAt: string;
+  documents: string[];
 }
 
 export interface LearningStation {

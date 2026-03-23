@@ -29,14 +29,21 @@ function killPortWindows(targetPort) {
 }
 
 function cleanNextCache() {
-  const nextDir = path.join(root, ".next");
-  try {
-    if (fs.existsSync(nextDir)) {
-      fs.rmSync(nextDir, { recursive: true, force: true });
-      console.log("[prepare-dev] removed .next cache");
+  const cacheDirs = [".next", ".next-dev"];
+  for (const dirName of cacheDirs) {
+    const dirPath = path.join(root, dirName);
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        if (!fs.existsSync(dirPath)) break;
+        fs.rmSync(dirPath, { recursive: true, force: true, maxRetries: 3, retryDelay: 150 });
+        console.log(`[prepare-dev] removed ${dirName} cache`);
+        break;
+      } catch (error) {
+        if (attempt === 3) {
+          console.warn(`[prepare-dev] failed to remove ${dirName}: ${error.message}`);
+        }
+      }
     }
-  } catch (error) {
-    console.warn(`[prepare-dev] failed to remove .next: ${error.message}`);
   }
 }
 

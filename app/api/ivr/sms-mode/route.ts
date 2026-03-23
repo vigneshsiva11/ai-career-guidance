@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
           id: 0,
           question_text: speechResult,
           language: "en", // Default to English for voice input
+          response_language: "en",
           question_type: "voice",
           status: "pending",
           user_id: 0,

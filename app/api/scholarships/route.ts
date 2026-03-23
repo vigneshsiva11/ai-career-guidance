@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       id: Date.now().toString(),
       userId,
       scholarshipId,
-      status: "applied",
+      status: "applied" as const,
       appliedAt: new Date().toISOString(),
       documents: [],
     };

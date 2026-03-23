@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { openaiTranscriptionService } from '@/lib/openai-transcription-service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,33 +18,7 @@ export async function POST(request: NextRequest) {
     console.log('[Transcribe] Processing audio file:', audioFile.name, audioFile.size, 'bytes')
     console.log('[Transcribe] Language:', language, 'Type:', typeof language)
 
-    // Try OpenAI Whisper first (most accurate)
-    if (openaiTranscriptionService.isAvailable()) {
-      try {
-        console.log('[Transcribe] Attempting OpenAI Whisper transcription...')
-        const result = await openaiTranscriptionService.transcribeAudio(audioFile, language)
-        
-        console.log('[Transcribe] OpenAI Whisper transcription successful!')
-        console.log('[Transcribe] Transcribed text:', result.text)
-        
-        return NextResponse.json({
-          success: true,
-          data: result
-        })
-      } catch (openaiError) {
-        console.error('[Transcribe] OpenAI Whisper failed, trying Gemini AI:', openaiError)
-        
-        // Check if it's a rate limit or quota error
-        if (openaiError.message && (openaiError.message.includes('quota') || openaiError.message.includes('rate'))) {
-          console.error('[Transcribe] OpenAI quota/rate limit exceeded. Consider upgrading your plan.')
-        }
-      }
-    } else {
-      console.log('[Transcribe] OpenAI API key not found, trying Gemini AI')
-      console.log('[Transcribe] To enable OpenAI Whisper, create a .env.local file with OPENAI_API_KEY=your_key')
-    }
-
-    // Try Gemini AI as fallback
+    // Try Gemini AI first
     const geminiApiKey = process.env.GEMINI_API_KEY
     if (geminiApiKey) {
       try {
@@ -69,9 +42,11 @@ export async function POST(request: NextRequest) {
         })
       } catch (geminiError) {
         console.error('[Transcribe] Gemini AI failed, falling back to mock:', geminiError)
+        const geminiMessage =
+          geminiError instanceof Error ? geminiError.message : String(geminiError)
         
         // Check if it's a rate limit error
-        if (geminiError.message && geminiError.message.includes('429')) {
+        if (geminiMessage.includes('429')) {
           console.error('[Transcribe] Gemini rate limit exceeded. Consider upgrading your plan or waiting for quota reset.')
         }
       }
@@ -270,10 +245,15 @@ async function transcribeWithGeminiAI(audioFile: File, language: string, apiKey:
     return transcribedText
   } catch (error) {
     console.error('[Transcribe] Gemini AI transcription error:', error)
+    const errorObj = error as {
+      message?: string
+      status?: number
+      statusText?: string
+    }
     console.error('[Transcribe] Error details:', {
-      message: error.message,
-      status: error.status,
-      statusText: error.statusText
+      message: errorObj.message,
+      status: errorObj.status,
+      statusText: errorObj.statusText
     })
     throw error
   }

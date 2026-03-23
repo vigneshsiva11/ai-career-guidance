@@ -5,6 +5,8 @@ import type {
   Subject,
   Reply,
   QuizAttendance,
+  Scholarship,
+  ScholarshipApplication,
 } from "./types";
 import { connectDatabase } from "@/server/config/database";
 import { UserModel } from "@/server/models/User";
@@ -45,30 +47,6 @@ const mockSubjects: Subject[] = [
   },
 ];
 
-interface Scholarship {
-  id: string;
-  name: string;
-  provider: string;
-  amount: number;
-  category: string;
-  description: string;
-  eligibleStates: string[];
-  minGrade: number;
-  maxGrade: number;
-  deadline: string;
-  requirements: string[];
-  applicationUrl: string;
-}
-
-interface ScholarshipApplication {
-  id: string;
-  userId: string;
-  scholarshipId: string;
-  status: "applied" | "under_review" | "approved" | "rejected";
-  appliedAt: string;
-  documents: string[];
-}
-
 interface Notification {
   id: string;
   userId: string;
@@ -94,6 +72,7 @@ const mockScholarships: Scholarship[] = [
     deadline: "2026-03-31",
     requirements: ["Income criteria as per latest notification"],
     applicationUrl: "https://scholarships.gov.in/",
+    created_at: new Date().toISOString(),
   },
 ];
 
@@ -133,7 +112,7 @@ function toPublicUser(doc: any): User {
 
 async function nextLegacyId() {
   await connectDatabase();
-  const latest = await UserModel.findOne({}, { legacyId: 1 })
+  const latest: any = await UserModel.findOne({}, { legacyId: 1 })
     .sort({ legacyId: -1 })
     .lean();
   return (latest?.legacyId || 0) + 1;
@@ -141,7 +120,7 @@ async function nextLegacyId() {
 
 async function nextModelLegacyId(model: any) {
   await connectDatabase();
-  const latest = await model
+  const latest: any = await model
     .findOne({}, { legacyId: 1 })
     .sort({ legacyId: -1 })
     .lean();
@@ -196,7 +175,10 @@ export async function getAllUsers(): Promise<User[]> {
 }
 
 export async function createQuestion(
-  questionData: Omit<Question, "id" | "created_at" | "status">
+  questionData: Omit<Question, "id" | "created_at" | "status"> & {
+    subject_id?: number;
+    difficulty_level?: string;
+  }
 ): Promise<Question> {
   const legacyId = await nextModelLegacyId(QuestionModel);
   const created = await QuestionModel.create({
@@ -214,7 +196,7 @@ export async function createQuestion(
 
 export async function getQuestionById(id: number): Promise<Question | null> {
   await connectDatabase();
-  const question = await QuestionModel.findOne({ legacyId: id }).lean();
+  const question: any = await QuestionModel.findOne({ legacyId: id }).lean();
   if (!question) return null;
   return {
     id: question.legacyId,
@@ -452,7 +434,7 @@ export async function getQuizAttendanceById(
   id: number
 ): Promise<QuizAttendance | null> {
   await connectDatabase();
-  const attendance = await QuizAttendanceModel.findOne({ legacyId: id }).lean();
+  const attendance: any = await QuizAttendanceModel.findOne({ legacyId: id }).lean();
   if (!attendance) return null;
   return {
     id: attendance.legacyId,

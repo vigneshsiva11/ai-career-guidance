@@ -8,6 +8,11 @@ export interface OCRResult {
   text: string
   confidence: number
   language: string
+  detectedLanguage?: string
+  validation?: {
+    isValid: boolean
+    issues: string[]
+  }
   boundingBoxes?: Array<{
     text: string
     x: number
@@ -124,6 +129,11 @@ export class OCRService {
         text: extractedText,
         confidence: 0.95, // High confidence for Gemini AI
         language: language,
+        detectedLanguage: language,
+        validation: {
+          isValid: true,
+          issues: [],
+        },
         boundingBoxes: this.generateBoundingBoxes(extractedText),
         processingTime: Date.now() - startTime,
       }
@@ -156,6 +166,11 @@ export class OCRService {
         text: detectedText,
         confidence: 0.92, // High confidence for detected content
         language: language,
+        detectedLanguage: language,
+        validation: {
+          isValid: true,
+          issues: [],
+        },
         boundingBoxes: this.generateBoundingBoxes(detectedText),
         processingTime: Date.now() - startTime,
       }
@@ -169,6 +184,11 @@ export class OCRService {
       text: mockResults.text,
       confidence: mockResults.confidence,
       language: language,
+      detectedLanguage: language,
+      validation: {
+        isValid: true,
+        issues: [],
+      },
       boundingBoxes: mockResults.boundingBoxes,
       processingTime: Date.now() - startTime,
     }

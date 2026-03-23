@@ -1,4 +1,4 @@
-import type { Scholarship } from "./database"
+import type { Scholarship } from "./types"
 import { cacheGet, cacheSet } from "./utils"
 
 export interface FetchScholarshipsOptions {
@@ -164,7 +164,9 @@ function cryptoRandomId(): string {
 function dedupeAndMerge(items: Scholarship[]): Scholarship[] {
   const map = new Map<string, Scholarship>()
   for (const s of items) {
-    const key = `${s.name.toLowerCase()}|${s.provider.toLowerCase()}`
+    const name = String(s.name || s.title || "")
+    const provider = String(s.provider || "")
+    const key = `${name.toLowerCase()}|${provider.toLowerCase()}`
     if (!map.has(key)) {
       map.set(key, s)
       continue
@@ -174,8 +176,14 @@ function dedupeAndMerge(items: Scholarship[]): Scholarship[] {
     map.set(key, {
       ...existing,
       ...s,
-      eligibleStates: existing.eligibleStates.length >= s.eligibleStates.length ? existing.eligibleStates : s.eligibleStates,
-      requirements: existing.requirements.length >= s.requirements.length ? existing.requirements : s.requirements,
+      eligibleStates:
+        existing.eligibleStates.length >= s.eligibleStates.length
+          ? existing.eligibleStates
+          : s.eligibleStates,
+      requirements:
+        existing.requirements.length >= s.requirements.length
+          ? existing.requirements
+          : s.requirements,
       amount: s.amount || existing.amount,
       deadline: s.deadline || existing.deadline,
       applicationUrl: s.applicationUrl || existing.applicationUrl,
@@ -183,5 +191,3 @@ function dedupeAndMerge(items: Scholarship[]): Scholarship[] {
   }
   return Array.from(map.values())
 }
-
-

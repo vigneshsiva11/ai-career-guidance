@@ -27,7 +27,7 @@ function toPublicUser(doc: any) {
 }
 
 async function nextLegacyId() {
-  const latest = await UserModel.findOne({}, { legacyId: 1 })
+  const latest: any = await UserModel.findOne({}, { legacyId: 1 })
     .sort({ legacyId: -1 })
     .lean();
   return (latest?.legacyId || 0) + 1;

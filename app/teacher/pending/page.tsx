@@ -27,7 +27,7 @@ import {
   ArrowLeft,
   Send,
   Clock,
-  User,
+  UserCircle,
   CheckCircle,
   AlertCircle,
   Loader2,
@@ -35,7 +35,7 @@ import {
   Search,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { User, Question } from "@/lib/types";
+import type { User as AppUser, Question } from "@/lib/types";
 
 interface PendingQuestion extends Question {
   student_name: string;
@@ -45,7 +45,7 @@ interface PendingQuestion extends Question {
 }
 
 export default function TeacherPendingQuestionsPage() {
-  const [teacher, setTeacher] = useState<User | null>(null);
+  const [teacher, setTeacher] = useState<AppUser | null>(null);
   const [pendingQuestions, setPendingQuestions] = useState<PendingQuestion[]>(
     []
   );
@@ -359,7 +359,7 @@ export default function TeacherPendingQuestionsPage() {
                           </p>
                           <div className="flex items-center space-x-4 text-sm text-gray-500">
                             <span className="flex items-center space-x-1">
-                              <User className="h-3 w-3" />
+                              <UserCircle className="h-3 w-3" />
                               <span>{question.student_name}</span>
                             </span>
                             <span>{getLanguageName(question.language)}</span>

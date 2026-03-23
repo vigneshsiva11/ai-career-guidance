@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     await connectDatabase();
-    const user = await UserModel.findById(userId).lean();
+    const user: any = await UserModel.findById(userId).lean();
     if (!user) {
       return json({ success: false, error: "Unauthorized" }, 401);
     }

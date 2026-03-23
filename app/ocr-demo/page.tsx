@@ -348,7 +348,7 @@ export default function OCRDemoPage() {
                         <div className="space-y-2">
                           <p className="text-yellow-800 font-medium">Issues detected:</p>
                           <ul className="text-sm text-yellow-700 space-y-1">
-                            {ocrResult.validation.issues.map((issue, index) => (
+                            {ocrResult.validation.issues.map((issue: string, index: number) => (
                               <li key={index}>• {issue}</li>
                             ))}
                           </ul>

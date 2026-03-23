@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
       image_url: body.image_url,
       audio_url: body.audio_url,
       language: body.language || "en",
+      response_language: body.language || "en",
       difficulty_level: body.difficulty_level || "medium",
     })
 
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
       }
 
       await connectDatabase()
-      const authUser = await UserModel.findById(authUserId).lean()
+      const authUser: any = await UserModel.findById(authUserId).lean()
       const authLegacyId = Number(authUser?.legacyId || 0)
       const requestedId = Number.parseInt(userId)
       if (!authLegacyId || requestedId !== authLegacyId) {

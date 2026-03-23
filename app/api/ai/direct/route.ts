@@ -26,8 +26,10 @@ export async function POST(request: NextRequest) {
       subject_id: getSubjectId(subject || "General"),
       difficulty_level: getDifficultyFromGrade(grade || "Mixed"),
       language: language || "en",
+      response_language: language || "en",
       question_type: "text" as const,
       student_id: 0, // Temporary student ID
+      user_id: 0,
       status: "pending" as const,
       created_at: new Date().toISOString(),
     }

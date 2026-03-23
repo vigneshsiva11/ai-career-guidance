@@ -1,0 +1,12 @@
+{
+  "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/api/profile/setup/route": "app/api/profile/setup/route.js",
+  "/api/career-assessment/route": "app/api/career-assessment/route.js",
+  "/api/questions/route": "app/api/questions/route.js",
+  "/api/resume/latest/route": "app/api/resume/latest/route.js",
+  "/api/ocr/languages/route": "app/api/ocr/languages/route.js",
+  "/page": "app/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/resume-optimizer/page": "app/resume-optimizer/page.js",
+  "/ask/page": "app/ask/page.js"
+}

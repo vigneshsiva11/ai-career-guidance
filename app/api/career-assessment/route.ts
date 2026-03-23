@@ -428,8 +428,8 @@ export async function GET(request: NextRequest) {
     const user = await resolveUser(userId);
     if (!user) return NextResponse.json({ success: true, data: null });
 
-    const assessment = await AssessmentModel.findOne({ userId: user._id }).lean();
-    const roadmap = await RoadmapModel.findOne({ userId: user._id }).lean();
+    const assessment: any = await AssessmentModel.findOne({ userId: user._id }).lean();
+    const roadmap: any = await RoadmapModel.findOne({ userId: user._id }).lean();
 
     if (!assessment || !assessment.isCompleted || !roadmap) {
       return NextResponse.json({

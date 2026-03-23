@@ -850,8 +850,8 @@ function generateSampleQuestions(
     return ensureCount(genericQuestions, count, concept);
   }
 
-  const levelKey = ["beginner", "intermediate", "advanced"].includes(level)
-    ? level
+  const levelKey: "beginner" | "intermediate" | "advanced" = ["beginner", "intermediate", "advanced"].includes(level)
+    ? (level as "beginner" | "intermediate" | "advanced")
     : "beginner";
   const bank =
     subjectQuestions[subject]?.[levelKey] || subjectQuestions.general[levelKey];

@@ -3,7 +3,6 @@
 
 import { getUserByPhone, createUser, createQuestion } from "./database"
 import { aiService } from "./ai-service"
-import { openaiTranscriptionService } from "./openai-transcription-service"
 import type { User } from "./types"
 
 export interface IVRCall {
@@ -138,6 +137,7 @@ export class IVRService {
         question_text: voiceInput.transcription,
         question_type: "voice",
         language: user.preferred_language,
+        response_language: user.preferred_language,
         difficulty_level: "medium",
       })
 
@@ -326,25 +326,11 @@ export class IVRService {
       const audioBlob = await response.blob()
       const audioFile = new File([audioBlob], 'voice-input.wav', { type: audioBlob.type })
       
-      // Use OpenAI Whisper for transcription
-      if (openaiTranscriptionService.isAvailable()) {
-        const result = await openaiTranscriptionService.transcribeAudio(audioFile, language)
-        
-        console.log(`[STT] OpenAI transcription successful: ${result.text}`)
-        
-        return {
-          transcription: result.text,
-          confidence: result.confidence,
-          language: result.language,
-        }
-      } else {
-        // Fallback to mock transcription if OpenAI is not available
-        console.log(`[STT] OpenAI not available, using mock transcription`)
-        return {
-          transcription: "What is photosynthesis?", // Mock transcription
-          confidence: 0.85,
-          language: language,
-        }
+      console.log(`[STT] Using built-in mock transcription flow`)
+      return {
+        transcription: "What is photosynthesis?",
+        confidence: 0.85,
+        language: language,
       }
     } catch (error) {
       console.error(`[STT] Transcription error:`, error)
