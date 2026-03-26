@@ -35,6 +35,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useUserProfile } from "@/components/user-profile-provider";
 
 type SkillLevel = "Beginner" | "Intermediate" | "Advanced";
 
@@ -279,6 +280,7 @@ function SkillGlyph({ label }: { label: string }) {
 
 export default function ProgressTrackerPage() {
   const router = useRouter();
+  const { status: profileStatus, data: cachedProfile } = useUserProfile();
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<ProgressData | null>(null);
   const [error, setError] = useState("");
@@ -300,13 +302,37 @@ export default function ProgressTrackerPage() {
     setMounted(true);
     const load = async () => {
       try {
-        const [trackerResponse, progressResponse, tasksResponse] = await Promise.all([
+        if (profileStatus === "unauthorized") {
+          router.push("/auth/signin");
+          return;
+        }
+
+        if (profileStatus === "loading" && !cachedProfile) {
+          return;
+        }
+
+        if (cachedProfile?.progressTracker) {
+          setData({
+            ...cachedProfile.progressTracker,
+            careerScore: cachedProfile.userProgress?.careerScore ?? cachedProfile.progressTracker.careerScore,
+            skillCoverage: cachedProfile.userProgress?.skillCoverage ?? cachedProfile.progressTracker.skillCoverage,
+            requiredSkills: cachedProfile.userProgress?.requiredSkills ?? cachedProfile.progressTracker.requiredSkills,
+            totalTasks: cachedProfile.userProgress?.totalTasks ?? cachedProfile.progressTracker.totalTasks,
+            completedTaskCount:
+              cachedProfile.userProgress?.completedTaskCount ?? cachedProfile.progressTracker.completedTaskCount,
+            completedSkills:
+              cachedProfile.userProgress?.completedSkills ?? cachedProfile.progressTracker.completedSkills,
+            completedSteps:
+              cachedProfile.userProgress?.completedSteps ?? cachedProfile.progressTracker.completedSteps,
+            completedTasks:
+              cachedProfile.userProgress?.completedTasks ?? cachedProfile.progressTracker.completedTasks,
+            roadmapProgress:
+              cachedProfile.userProgress?.roadmapProgress ?? cachedProfile.progressTracker.roadmapProgress,
+          });
+        }
+
+        const [trackerResponse, tasksResponse] = await Promise.all([
           fetch("/api/progress-tracker", {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-          }),
-          fetch("/api/user/profile-progress", {
             method: "GET",
             credentials: "include",
             cache: "no-store",
@@ -325,51 +351,41 @@ export default function ProgressTrackerPage() {
         if (!result.success || !result.data) {
           throw new Error(result.error || "Failed to load progress tracker");
         }
-        const progressResult = await progressResponse.json();
         const tasksResult = await tasksResponse.json();
-        if (progressResult.success && progressResult.data) {
-          setData({
-            ...result.data,
-            careerScore:
-              typeof progressResult.data.careerScore === "number"
-                ? progressResult.data.careerScore
-                : result.data.careerScore,
-            skillCoverage:
-              typeof progressResult.data.skillCoverage === "number"
-                ? progressResult.data.skillCoverage
-                : result.data.skillCoverage,
-            requiredSkills: Array.isArray(progressResult.data.requiredSkills)
-              ? progressResult.data.requiredSkills.map(String)
-              : result.data.requiredSkills || result.data.roleSkills || [],
-            totalTasks:
-              typeof progressResult.data.totalTasks === "number"
-                ? progressResult.data.totalTasks
-                : result.data.totalTasks,
-            completedTaskCount:
-              typeof progressResult.data.completedTaskCount === "number"
-                ? progressResult.data.completedTaskCount
-                : result.data.completedTaskCount,
-            completedSkills: Array.isArray(progressResult.data.completedSkills)
-              ? progressResult.data.completedSkills.map(String)
-              : result.data.completedSkills || [],
-            completedSteps: Array.isArray(progressResult.data.completedSteps)
-              ? progressResult.data.completedSteps.map(String)
-              : result.data.completedSteps || [],
-            completedTasks: Array.isArray(progressResult.data.completedTasks)
-              ? progressResult.data.completedTasks.map(String)
-              : tasksResult.success && Array.isArray(tasksResult.data?.completedTasks)
+        setData({
+          ...result.data,
+          careerScore:
+            cachedProfile?.userProgress?.careerScore ?? result.data.careerScore,
+          skillCoverage:
+            cachedProfile?.userProgress?.skillCoverage ?? result.data.skillCoverage,
+          requiredSkills:
+            cachedProfile?.userProgress?.requiredSkills ||
+            result.data.requiredSkills ||
+            result.data.roleSkills ||
+            [],
+          totalTasks:
+            cachedProfile?.userProgress?.totalTasks ?? result.data.totalTasks,
+          completedTaskCount:
+            cachedProfile?.userProgress?.completedTaskCount ?? result.data.completedTaskCount,
+          completedSkills:
+            cachedProfile?.userProgress?.completedSkills || result.data.completedSkills || [],
+          completedSteps:
+            cachedProfile?.userProgress?.completedSteps || result.data.completedSteps || [],
+          completedTasks:
+            cachedProfile?.userProgress?.completedTasks ||
+            (tasksResult.success && Array.isArray(tasksResult.data?.completedTasks)
               ? tasksResult.data.completedTasks.map(String)
-              : result.data.completedTasks || result.data.completedSteps || [],
-            roadmapProgress: progressResult.data.roadmapProgress || result.data.roadmapProgress,
-          });
-        } else {
-          setData(result.data);
-        }
+              : result.data.completedTasks || result.data.completedSteps || []),
+          roadmapProgress:
+            cachedProfile?.userProgress?.roadmapProgress || result.data.roadmapProgress,
+        });
       } catch (e) {
         console.error("Progress tracker page load error:", e);
         setError("Unable to load progress tracker right now.");
       } finally {
-        setIsLoading(false);
+        if (profileStatus !== "loading") {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -391,7 +407,7 @@ export default function ProgressTrackerPage() {
       document.removeEventListener("visibilitychange", handleFocusReload);
       window.removeEventListener("storage", handleStorage);
     };
-  }, [router]);
+  }, [cachedProfile, profileStatus, router]);
 
   const openLearningModal = async (itemType: LearningItemType, itemName: string) => {
     if (!data) return;

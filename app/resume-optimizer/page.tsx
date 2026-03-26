@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useUserProfile } from "@/components/user-profile-provider";
 
 type ResumeAnalysis = {
   matchedSkills: string[];
@@ -165,6 +166,7 @@ function buildJobFitSummary(job: ResumeAnalysis["jobSuggestions"][number]) {
 }
 
 export default function ResumeOptimizerPage() {
+  const { status: profileStatus, data: cachedProfile } = useUserProfile();
   const [data, setData] = useState<ResumeApiResponse | null>(null);
   const [pageError, setPageError] = useState("");
   const [uploadError, setUploadError] = useState("");
@@ -249,6 +251,19 @@ export default function ResumeOptimizerPage() {
     loadPage();
   }, []);
 
+  useEffect(() => {
+    if (cachedProfile?.selectedRole) {
+      setData((current) => {
+        if (current?.selectedRole === cachedProfile.selectedRole) return current;
+        return {
+          selectedRole: current?.selectedRole || cachedProfile.selectedRole,
+          roleSkills: current?.roleSkills || cachedProfile.progressTracker.roleSkills || [],
+          analysis: current?.analysis || null,
+        };
+      });
+    }
+  }, [cachedProfile]);
+
   const handleUpload = async () => {
     if (!selectedFile) {
       setUploadError("Please choose a resume file before starting the analysis.");
@@ -317,7 +332,10 @@ export default function ResumeOptimizerPage() {
     }
   };
 
-  const roleLabel = data?.selectedRole || "No career path selected yet";
+  const roleLabel =
+    data?.selectedRole ||
+    cachedProfile?.selectedRole ||
+    (profileStatus === "loading" ? "Loading profile..." : "No career path selected yet");
 
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-6 md:px-8 md:py-10">

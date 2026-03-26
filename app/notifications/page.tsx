@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -18,6 +19,7 @@ interface Notification {
 }
 
 export default function NotificationsPage() {
+  const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -194,7 +196,7 @@ export default function NotificationsPage() {
                   )}
 
                   {notification.scholarshipId && (
-                    <Button onClick={() => (window.location.href = "/scholarships")} size="sm">
+                    <Button onClick={() => router.push("/scholarships")} size="sm">
                       View Scholarship
                     </Button>
                   )}

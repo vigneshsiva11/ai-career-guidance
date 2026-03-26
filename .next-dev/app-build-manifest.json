@@ -26,25 +26,50 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/me/route.js"
     ],
+    "/api/user/full-profile/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/user/full-profile/route.js"
+    ],
     "/api/career-assessment/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/career-assessment/route.js"
+    ],
+    "/assessment/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/assessment/page.js"
     ],
     "/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/page.js"
     ],
-    "/api/profile/setup/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/profile/setup/route.js"
-    ],
     "/api/questions/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/questions/route.js"
+    ],
+    "/roadmap/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/roadmap/page.js"
+    ],
+    "/api/tasks/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/tasks/route.js"
+    ],
+    "/progress-tracker/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/progress-tracker/page.js"
+    ],
+    "/api/progress-tracker/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/progress-tracker/route.js"
     ],
     "/resume-optimizer/page": [
       "static/chunks/webpack.js",
@@ -56,20 +81,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/resume/latest/route.js"
     ],
-    "/api/resume/analyze/route": [
+    "/api/tasks/toggle/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/resume/analyze/route.js"
+      "static/chunks/app/api/tasks/toggle/route.js"
     ],
-    "/ask/page": [
+    "/api/progress-tracker/learning-guide/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/ask/page.js"
-    ],
-    "/api/ocr/languages/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/ocr/languages/route.js"
+      "static/chunks/app/api/progress-tracker/learning-guide/route.js"
     ]
   }
 }

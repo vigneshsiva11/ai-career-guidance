@@ -5,6 +5,8 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { RuntimeErrorGuard } from "@/components/runtime-error-guard";
 import { Toaster } from "sonner";
+import { UserProfileProvider } from "@/components/user-profile-provider";
+import { RoutePrefetcher } from "@/components/route-prefetcher";
 
 // Force fully dynamic SSR across the app router tree.
 export const dynamic = "force-dynamic";
@@ -55,9 +57,12 @@ export default function RootLayout({
         />
       </head>
       <body className={GeistSans.className}>
-        <RuntimeErrorGuard />
-        <Toaster position="top-right" richColors />
-        {children}
+        <UserProfileProvider>
+          <RoutePrefetcher />
+          <RuntimeErrorGuard />
+          <Toaster position="top-right" richColors />
+          {children}
+        </UserProfileProvider>
       </body>
     </html>
   );

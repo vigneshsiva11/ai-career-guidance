@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import type { User } from "@/lib/types";
 import { toast } from "sonner";
+import { useUserProfile } from "@/components/user-profile-provider";
 
 interface AIQuestionHistoryItem {
   id: string;
@@ -102,6 +103,7 @@ const GOAL_OPTIONS = [
 ];
 
 export default function DashboardPage() {
+  const { status: profileStatus, data: cachedProfile, refreshProfile } = useUserProfile();
   const [user, setUser] = useState<User | null>(null);
   const [aiQuestionHistory, setAiQuestionHistory] = useState<AIQuestionHistoryItem[]>([]);
   const [expandedAiIds, setExpandedAiIds] = useState<Set<string>>(new Set());
@@ -123,81 +125,61 @@ export default function DashboardPage() {
   });
   const [skillLevels, setSkillLevels] = useState<Record<string, SkillLevel>>({});
   const router = useRouter();
+  const resolvedAssessmentCompleted = Boolean(
+    cachedProfile?.roadmap?.assessmentCompleted ||
+    cachedProfile?.roadmap?.result ||
+    cachedProfile?.user?.assessmentCompleted ||
+    progressData?.hasSelectedRole
+  );
 
   useEffect(() => {
-    const bootstrap = async () => {
-      try {
-        const parseJsonSafely = async (response: Response) => {
-          const raw = await response.text();
-          try {
-            return JSON.parse(raw);
-          } catch {
-            throw new Error(
-              `Invalid JSON response (status ${response.status}).`
-            );
-          }
-        };
-
-        const meResponse = await fetch("/api/auth/me", {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        });
-        if (meResponse.status === 401) {
-          router.push("/auth/signin");
-          return;
-        }
-
-        const meResult = await parseJsonSafely(meResponse);
-        if (!meResult.success || !meResult.data) {
-          router.push("/auth/signin");
-          return;
-        }
-
-        const me = meResult.data;
-        const normalizedUser: User = {
-          id: me.legacyId ?? 0,
-          phone_number: "",
-          name: me.name,
-          user_type: me.role || "student",
-          preferred_language: "en",
-          location: "",
-          education_level: "",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        setUser(normalizedUser);
-        localStorage.setItem("classless_user", JSON.stringify(normalizedUser));
-
-        if (normalizedUser.id) {
-          fetchAssessmentStatus(normalizedUser.id);
-        }
-        fetchProgressTracker();
-        fetchAIQuestionHistory();
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Dashboard auth bootstrap failed:", error);
-        router.push("/auth/signin");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    bootstrap();
-  }, [router]);
-
-  const fetchAssessmentStatus = async (userId: number) => {
-    try {
-      const response = await fetch(`/api/career-assessment?user_id=${userId}`);
-      const result = await response.json();
-      if (result.success) {
-        setAssessmentCompleted(Boolean(result.data?.assessmentCompleted));
-      }
-    } catch (error) {
-      console.error("Error fetching assessment status:", error);
+    if (profileStatus === "unauthorized") {
+      router.push("/auth/signin");
+      return;
     }
-  };
+
+    if (profileStatus === "loading") {
+      setIsLoading(true);
+      return;
+    }
+
+    if (profileStatus === "ready" && cachedProfile) {
+      const normalizedUser: User = {
+        id: cachedProfile.user.legacyId ?? 0,
+        phone_number: "",
+        name: cachedProfile.user.name,
+        user_type:
+          cachedProfile.user.role === "teacher" || cachedProfile.user.role === "admin"
+            ? cachedProfile.user.role
+            : "student",
+        preferred_language: "en",
+        location: "",
+        education_level: cachedProfile.progressTracker.profile.educationLevel || "",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      setUser(normalizedUser);
+      localStorage.setItem("classless_user", JSON.stringify(normalizedUser));
+      setAssessmentCompleted(
+        Boolean(
+          cachedProfile.roadmap?.assessmentCompleted ||
+          cachedProfile.roadmap?.result ||
+          cachedProfile.user.assessmentCompleted ||
+          cachedProfile.progressTracker?.hasSelectedRole
+        )
+      );
+      setProgressData(cachedProfile.progressTracker);
+      setProfileForm({
+        educationLevel: cachedProfile.progressTracker.profile?.educationLevel || "",
+        fieldOfStudy: cachedProfile.progressTracker.profile?.fieldOfStudy || "",
+        experienceLevel: cachedProfile.progressTracker.profile?.experienceLevel || "",
+        learningGoal: cachedProfile.progressTracker.profile?.learningGoal || "",
+      });
+      setSkillLevels(cachedProfile.progressTracker.profile?.skillLevels || {});
+      setIsLoading(false);
+    }
+  }, [cachedProfile, profileStatus, router]);
 
   const fetchAIQuestionHistory = async () => {
     try {
@@ -213,28 +195,14 @@ export default function DashboardPage() {
     }
   };
 
-  const fetchProgressTracker = async () => {
-    try {
-      const response = await fetch("/api/profile/setup", {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
-      });
-      const result = await response.json();
-      if (result.success && result.data) {
-        setProgressData(result.data);
-        setProfileForm({
-          educationLevel: result.data.profile?.educationLevel || "",
-          fieldOfStudy: result.data.profile?.fieldOfStudy || "",
-          experienceLevel: result.data.profile?.experienceLevel || "",
-          learningGoal: result.data.profile?.learningGoal || "",
-        });
-        setSkillLevels(result.data.profile?.skillLevels || {});
-      }
-    } catch (error) {
-      console.error("Error fetching progress tracker:", error);
+  useEffect(() => {
+    if (profileStatus === "ready" && cachedProfile?.user?.id) {
+      void fetchAIQuestionHistory();
+      router.prefetch("/progress-tracker");
+      router.prefetch("/roadmap");
+      router.prefetch("/resume-optimizer");
     }
-  };
+  }, [cachedProfile?.user?.id, profileStatus, router]);
 
   const saveCareerProfile = async () => {
     try {
@@ -257,7 +225,17 @@ export default function DashboardPage() {
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to save profile");
       }
-      await fetchProgressTracker();
+      const refreshed = await refreshProfile({ force: true });
+      if (refreshed) {
+        setProgressData(refreshed.progressTracker);
+        setProfileForm({
+          educationLevel: refreshed.progressTracker.profile?.educationLevel || "",
+          fieldOfStudy: refreshed.progressTracker.profile?.fieldOfStudy || "",
+          experienceLevel: refreshed.progressTracker.profile?.experienceLevel || "",
+          learningGoal: refreshed.progressTracker.profile?.learningGoal || "",
+        });
+        setSkillLevels(refreshed.progressTracker.profile?.skillLevels || {});
+      }
       toast.success("Career profile updated successfully.");
       setShowProfileUpdatedPopup(true);
       window.setTimeout(() => setShowProfileUpdatedPopup(false), 3000);
@@ -442,10 +420,10 @@ export default function DashboardPage() {
                   <CheckCircle2 className="h-6 w-6 text-emerald-600" />
                 </span>
                 <CardTitle className="mt-3 text-lg font-bold tracking-tight text-slate-900">
-                  Career Assessment {assessmentCompleted ? "Completed" : "Pending"}
+                  Career Assessment {resolvedAssessmentCompleted ? "Completed" : "Pending"}
                 </CardTitle>
                 <CardDescription className="text-slate-600">
-                  {assessmentCompleted
+                  {resolvedAssessmentCompleted
                     ? "Your strengths and personalized career roadmap are ready."
                     : "Complete your assessment to generate strengths and roadmap insights."}
                 </CardDescription>
@@ -453,11 +431,11 @@ export default function DashboardPage() {
               <CardContent>
                 <Button
                   onClick={() =>
-                    router.push(assessmentCompleted ? "/roadmap" : "/assessment")
+                    router.push(resolvedAssessmentCompleted ? "/roadmap" : "/assessment")
                   }
                   className="rounded-[10px] bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3 font-semibold text-white shadow-md transition-all duration-300 hover:scale-[1.02] hover:from-emerald-500 hover:to-teal-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.35)]"
                 >
-                  {assessmentCompleted
+                  {resolvedAssessmentCompleted
                     ? "View Strengths & Roadmap"
                     : "Complete Assessment"}
                   <ArrowRight className="ml-2 h-4 w-4" />

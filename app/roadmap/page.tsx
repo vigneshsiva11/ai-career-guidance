@@ -19,8 +19,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { User } from "@/lib/types";
 import { toast } from "sonner";
+import { useUserProfile } from "@/components/user-profile-provider";
 
 interface RoadmapData {
   strengthProfile: string;
@@ -104,6 +104,7 @@ function isTaskCompleted(task: string, completedSkills: string[]) {
 
 export default function RoadmapPage() {
   const router = useRouter();
+  const { status: profileStatus, data: cachedProfile, refreshProfile } = useUserProfile();
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<RoadmapData | null>(null);
   const [loadError, setLoadError] = useState<string>("");
@@ -120,87 +121,38 @@ export default function RoadmapPage() {
       advanced: "not-started",
     },
   });
-  const timelineRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const init = async () => {
       try {
-        const requestVersion = tasksMutationVersionRef.current;
-        const parseJsonSafely = async (response: Response) => {
-          const raw = await response.text();
-          try {
-            return JSON.parse(raw);
-          } catch {
-            throw new Error(
-              `Invalid JSON response (status ${response.status}).`
-            );
-          }
-        };
+        if (profileStatus === "unauthorized") {
+          router.push("/auth/signin");
+          return;
+        }
 
-        const meResponse = await fetch("/api/auth/me", {
+        if (profileStatus === "loading" || !cachedProfile) {
+          return;
+        }
+
+        const requestVersion = tasksMutationVersionRef.current;
+        if (cachedProfile.roadmap?.assessmentCompleted && cachedProfile.roadmap.result) {
+          setData(cachedProfile.roadmap.result as RoadmapData);
+        }
+        setCompletedSkills(cachedProfile.userProgress.completedSkills || []);
+        setProfileProgress({
+          careerScore: cachedProfile.userProgress.careerScore || 0,
+          stageProgress: {
+            beginner: cachedProfile.userProgress.stageProgress?.beginner || "not-started",
+            intermediate: cachedProfile.userProgress.stageProgress?.intermediate || "not-started",
+            advanced: cachedProfile.userProgress.stageProgress?.advanced || "not-started",
+          },
+        });
+
+        const tasksResponse = await fetch("/api/tasks", {
           method: "GET",
           credentials: "include",
           cache: "no-store",
         });
-        if (meResponse.status === 401) {
-          router.push("/auth/signin");
-          return;
-        }
-        const meResult = await parseJsonSafely(meResponse);
-        if (!meResult.success || !meResult.data) {
-          router.push("/auth/signin");
-          return;
-        }
-
-        const user = {
-          id: meResult.data.legacyId ?? 0,
-        } as User;
-
-        const controller = new AbortController();
-        const timer = window.setTimeout(() => controller.abort(), 12000);
-        const [assessmentResponse, progressResponse, tasksResponse] = await Promise.all([
-          fetch(`/api/career-assessment?user_id=${user.id}`, {
-            signal: controller.signal,
-            cache: "no-store",
-          }),
-          fetch("/api/user/profile-progress", {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-          }),
-          fetch("/api/tasks", {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-          }),
-        ]);
-        window.clearTimeout(timer);
-
-        const result = await assessmentResponse.json();
-        if (result.success && result.data?.assessmentCompleted) {
-          const existingResult = result.data?.result as RoadmapData | undefined;
-          if (existingResult) setData(existingResult);
-        }
-
-        const progressResult = await progressResponse.json();
-        if (progressResult.success) {
-          setCompletedSkills(
-            Array.isArray(progressResult.data?.completedSkills)
-              ? progressResult.data.completedSkills.map(String)
-              : []
-          );
-          setProfileProgress({
-            careerScore:
-              typeof progressResult.data?.careerScore === "number"
-                ? progressResult.data.careerScore
-                : 0,
-            stageProgress: {
-              beginner: (progressResult.data?.stageProgress?.beginner || "not-started") as StageStatus,
-              intermediate: (progressResult.data?.stageProgress?.intermediate || "not-started") as StageStatus,
-              advanced: (progressResult.data?.stageProgress?.advanced || "not-started") as StageStatus,
-            },
-          });
-        }
         const tasksResult = await tasksResponse.json();
         if (tasksResult.success && requestVersion === tasksMutationVersionRef.current) {
           setCompletedTasks(
@@ -213,45 +165,50 @@ export default function RoadmapPage() {
         console.error("Failed to load roadmap:", error);
         setLoadError("Unable to load roadmap right now. Please try again.");
       } finally {
-        setIsLoading(false);
+        if (profileStatus !== "loading") {
+          setIsLoading(false);
+        }
       }
     };
-    init();
-  }, [router]);
+    void init();
+  }, [cachedProfile, profileStatus, router]);
 
   useEffect(() => {
     const refreshProgress = async () => {
       try {
         if (document.visibilityState === "hidden") return;
         const requestVersion = tasksMutationVersionRef.current;
-        const [response, tasksResponse] = await Promise.all([
-          fetch("/api/user/profile-progress", {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-          }),
+        const [profileResult, tasksResponse] = await Promise.all([
+          refreshProfile({ force: true }),
           fetch("/api/tasks", {
             method: "GET",
             credentials: "include",
             cache: "no-store",
           }),
         ]);
-        const result = await response.json();
-        if (result.success) {
+        if (profileResult) {
           setCompletedSkills(
-            Array.isArray(result.data?.completedSkills)
-              ? result.data.completedSkills.map(String)
+            Array.isArray(profileResult.userProgress?.completedSkills)
+              ? profileResult.userProgress.completedSkills.map(String)
               : []
           );
           setProfileProgress({
             careerScore:
-              typeof result.data?.careerScore === "number" ? result.data.careerScore : 0,
+              typeof profileResult.userProgress?.careerScore === "number"
+                ? profileResult.userProgress.careerScore
+                : 0,
             stageProgress: {
-              beginner: (result.data?.stageProgress?.beginner || "not-started") as StageStatus,
-              intermediate: (result.data?.stageProgress?.intermediate || "not-started") as StageStatus,
-              advanced: (result.data?.stageProgress?.advanced || "not-started") as StageStatus,
+              beginner:
+                (profileResult.userProgress?.stageProgress?.beginner || "not-started") as StageStatus,
+              intermediate:
+                (profileResult.userProgress?.stageProgress?.intermediate || "not-started") as StageStatus,
+              advanced:
+                (profileResult.userProgress?.stageProgress?.advanced || "not-started") as StageStatus,
             },
           });
+          if (profileResult.roadmap?.assessmentCompleted && profileResult.roadmap.result) {
+            setData(profileResult.roadmap.result as RoadmapData);
+          }
         }
         const tasksResult = await tasksResponse.json();
         if (tasksResult.success && requestVersion === tasksMutationVersionRef.current) {
@@ -283,36 +240,6 @@ export default function RoadmapPage() {
     if (!data) return;
     const timer = window.setTimeout(() => setAnimateBars(true), 120);
     return () => window.clearTimeout(timer);
-  }, [data]);
-
-  useEffect(() => {
-    const container = timelineRef.current;
-    if (!container) return;
-
-    const items = container.querySelectorAll<HTMLElement>("[data-timeline-item]");
-    if (items.length === 0) return;
-
-    if (!("IntersectionObserver" in window)) {
-      items.forEach((item) => {
-        item.classList.add("!opacity-100", "!translate-y-0");
-      });
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("!opacity-100", "!translate-y-0");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.2 }
-    );
-
-    items.forEach((item) => observer.observe(item));
-    return () => observer.disconnect();
   }, [data]);
 
   if (isLoading) {
@@ -676,15 +603,14 @@ export default function RoadmapPage() {
               <CardDescription>Progressive stage-by-stage learning path.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div ref={timelineRef} className="relative space-y-6 pl-8">
+              <div className="relative space-y-6 pl-8">
                 <div className="absolute left-3 top-1 h-[calc(100%-0.5rem)] w-0.5 bg-indigo-200" />
 
                 {stageTaskGroups.map((stage) => (
                   <div key={stage.key} className="relative">
                     <div className="absolute -left-[27px] top-4 h-3 w-3 rounded-full bg-indigo-600 ring-4 ring-indigo-100" />
                     <Card
-                      data-timeline-item
-                      className="rounded-2xl border border-slate-200 bg-slate-50 p-1 shadow-sm opacity-0 translate-y-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                      className="rounded-2xl border border-slate-200 bg-slate-50 p-1 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                     >
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between gap-3">

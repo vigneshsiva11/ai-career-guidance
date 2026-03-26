@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 
 export default function QuizPage() {
+  const router = useRouter();
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [selectedConcept, setSelectedConcept] = useState<string>("");
@@ -38,6 +39,11 @@ export default function QuizPage() {
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [showCountPrompt, setShowCountPrompt] = useState<boolean>(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    router.prefetch("/quiz/interface");
+    router.prefetch("/quiz/progress");
+  }, [router]);
 
   const subjects = [
     {
@@ -207,7 +213,7 @@ export default function QuizPage() {
       params.append("concept", selectedConcept);
     }
 
-    window.location.href = `/quiz/interface?${params.toString()}`;
+    router.push(`/quiz/interface?${params.toString()}`);
   };
 
   const handleConceptSelection = (conceptId: string) => {
