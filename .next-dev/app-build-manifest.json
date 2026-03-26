@@ -90,6 +90,26 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/progress-tracker/learning-guide/route.js"
+    ],
+    "/api/resume/analyze/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/resume/analyze/route.js"
+    ],
+    "/ask/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/ask/page.js"
+    ],
+    "/api/ocr/languages/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/ocr/languages/route.js"
+    ],
+    "/api/ask-question/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/ask-question/route.js"
     ]
   }
 }

@@ -1,13 +1,12 @@
 {
-  "/api/user/full-profile/route": "app/api/user/full-profile/route.js",
-  "/api/progress-tracker/route": "app/api/progress-tracker/route.js",
-  "/api/progress-tracker/learning-guide/route": "app/api/progress-tracker/learning-guide/route.js",
-  "/api/tasks/route": "app/api/tasks/route.js",
-  "/api/resume/latest/route": "app/api/resume/latest/route.js",
   "/api/questions/route": "app/api/questions/route.js",
-  "/page": "app/page.js",
+  "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/api/ocr/languages/route": "app/api/ocr/languages/route.js",
+  "/api/ask-question/route": "app/api/ask-question/route.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/progress-tracker/page": "app/progress-tracker/page.js",
   "/roadmap/page": "app/roadmap/page.js",
+  "/page": "app/page.js",
+  "/progress-tracker/page": "app/progress-tracker/page.js",
+  "/ask/page": "app/ask/page.js",
   "/resume-optimizer/page": "app/resume-optimizer/page.js"
 }

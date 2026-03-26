@@ -1,12 +1,9 @@
 import "server-only";
 import { existsSync } from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { CareerProgressModel } from "@/server/models/CareerProgress";
 import { UserModel } from "@/server/models/User";
-
-const nodeRequire = createRequire(import.meta.url);
 
 function resolvePdfWorkerFileUrl() {
   const collectAncestors = (startDir: string, maxDepth = 8) => {
@@ -66,29 +63,11 @@ function resolvePdfWorkerFileUrl() {
     }
   }
 
-  const moduleSpecifiers = [
-    "pdfjs-dist/legacy/build/pdf.worker.mjs",
-    "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-    "pdfjs-dist/build/pdf.worker.mjs",
-    "pdfjs-dist/build/pdf.worker.min.mjs",
-  ];
-
-  for (const specifier of moduleSpecifiers) {
-    try {
-      const resolved = nodeRequire.resolve(specifier);
-      if (existsSync(resolved)) {
-        return pathToFileURL(resolved).href;
-      }
-    } catch {
-      // Keep trying other worker specifiers.
-    }
-  }
-
   throw new Error("Could not locate pdfjs worker file in node_modules.");
 }
 
 async function extractPdfTextWithPdfParse(buffer: Buffer, workerFileUrl: string) {
-  const { PDFParse } = nodeRequire("pdf-parse") as typeof import("pdf-parse");
+  const { PDFParse } = await import("pdf-parse");
   PDFParse.setWorker(workerFileUrl);
   const parser = new PDFParse({
     data: buffer,
@@ -469,7 +448,7 @@ export async function extractResumeTextFromPayload(
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
   ) {
-    const mammoth = nodeRequire("mammoth") as typeof import("mammoth");
+    const mammoth = await import("mammoth");
     const result = await mammoth.extractRawText({ buffer });
     return String(result.value || "").trim();
   }
