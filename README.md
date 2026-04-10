@@ -36,6 +36,8 @@ The system dynamically generates roadmaps based on user responses and stores per
 ## 🏗️ System Architecture
 
 Frontend:
+
+- React.js
 - Next.js (App Router)
 - TypeScript
 - Responsive UI
