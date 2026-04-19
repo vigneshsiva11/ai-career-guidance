@@ -134,6 +134,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (profileStatus === "unauthorized") {
+      const storedUser = localStorage.getItem("classless_user");
+      if (storedUser) {
+        setIsLoading(true);
+        void refreshProfile({ force: true });
+        return;
+      }
+
       router.push("/auth/signin");
       return;
     }
@@ -179,7 +186,7 @@ export default function DashboardPage() {
       setSkillLevels(cachedProfile.progressTracker.profile?.skillLevels || {});
       setIsLoading(false);
     }
-  }, [cachedProfile, profileStatus, router]);
+  }, [cachedProfile, profileStatus, refreshProfile, router]);
 
   const fetchAIQuestionHistory = async () => {
     try {

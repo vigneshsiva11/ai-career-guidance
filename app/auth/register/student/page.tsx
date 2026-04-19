@@ -131,8 +131,9 @@ export default function StudentRegisterPage() {
           return;
         }
         localStorage.setItem("classless_user", JSON.stringify(loginResult.data));
+        window.dispatchEvent(new Event("classless:auth-changed"));
         toast.success("Registration successful!");
-        router.replace("/");
+        router.replace("/dashboard");
       } else {
         toast.error(result.error || "Registration failed");
       }

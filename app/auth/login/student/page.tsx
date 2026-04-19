@@ -61,8 +61,9 @@ export default function StudentLoginPage() {
 
       if (result.success && result.data) {
         localStorage.setItem("classless_user", JSON.stringify(result.data));
+        window.dispatchEvent(new Event("classless:auth-changed"));
         toast.success("Login successful!");
-        router.push("/");
+        router.replace("/dashboard");
       } else {
         toast.error(result.error || "Login failed. Please try again.");
       }

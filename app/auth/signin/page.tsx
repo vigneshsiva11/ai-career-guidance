@@ -65,8 +65,9 @@ export default function SignInPage() {
       }
 
       localStorage.setItem("classless_user", JSON.stringify(result.data));
+      window.dispatchEvent(new Event("classless:auth-changed"));
       toast.success("Login successful!");
-      router.push("/");
+      router.replace("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Login failed. Please try again.");

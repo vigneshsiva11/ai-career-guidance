@@ -211,6 +211,20 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
     void refreshProfile();
   }, [refreshProfile]);
 
+  useEffect(() => {
+    const handleAuthChanged = () => {
+      void refreshProfile({ force: true });
+    };
+
+    window.addEventListener("classless:auth-changed", handleAuthChanged);
+    window.addEventListener("storage", handleAuthChanged);
+
+    return () => {
+      window.removeEventListener("classless:auth-changed", handleAuthChanged);
+      window.removeEventListener("storage", handleAuthChanged);
+    };
+  }, [refreshProfile]);
+
   const contextValue = useMemo<UserProfileContextValue>(
     () => ({
       status,

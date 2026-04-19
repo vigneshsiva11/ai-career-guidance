@@ -118,8 +118,9 @@ export default function RegisterPage() {
       }
 
       localStorage.setItem("classless_user", JSON.stringify(loginResult.data));
+      window.dispatchEvent(new Event("classless:auth-changed"));
       toast.success("Registration successful!");
-      router.replace("/");
+      router.replace("/dashboard");
     } catch (error) {
       console.error("Registration error:", error);
       toast.error("Registration failed. Please try again.");

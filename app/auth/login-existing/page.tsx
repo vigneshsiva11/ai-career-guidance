@@ -27,10 +27,8 @@ export default function ExistingLoginPage() {
       const result = await response.json()
 
       if (result.success && result.data) {
-        // Store user info in localStorage (simple auth for hackathon)
-        localStorage.setItem("classless_user", JSON.stringify(result.data))
-        toast.success("Login successful!")
-        router.push("/")
+        toast.error("Please sign in with your password to create a secure session.")
+        router.replace("/auth/signin")
       } else {
         toast.error("User not found. Please register first.")
         router.push("/auth/login")

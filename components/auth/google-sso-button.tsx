@@ -123,6 +123,7 @@ export function GoogleSSOButton({
       }
 
       localStorage.setItem("classless_user", JSON.stringify(result.data));
+      window.dispatchEvent(new Event("classless:auth-changed"));
       toast.success("Signed in with Google");
       router.replace("/dashboard");
     } catch (error) {
