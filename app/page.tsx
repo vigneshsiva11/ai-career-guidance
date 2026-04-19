@@ -36,6 +36,19 @@ type AuthUser = {
   lastLoginAt: string | null;
 };
 
+function getStoredAuthUser() {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.localStorage.getItem("classless_user");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as AuthUser | null;
+    return parsed?.id ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function HomePage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -52,6 +65,13 @@ export default function HomePage() {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
+        const storedUser = getStoredAuthUser();
+        if (!storedUser) {
+          setAuthUser(null);
+          setShowAssessmentPopup(false);
+          return;
+        }
+
         const parseJsonSafely = async (response: Response) => {
           const raw = await response.text();
           try {
@@ -69,6 +89,7 @@ export default function HomePage() {
           cache: "no-store",
         });
         if (meResponse.status === 401) {
+          localStorage.removeItem("classless_user");
           setAuthUser(null);
           setShowAssessmentPopup(false);
           return;

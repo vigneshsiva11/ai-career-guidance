@@ -19,6 +19,7 @@ declare global {
             client_id: string;
             scope: string;
             callback: (response: GoogleTokenResponse) => void;
+            error_callback?: (error: { type?: string; message?: string }) => void;
           }) => {
             requestAccessToken: (config?: { prompt?: string }) => void;
           };
@@ -69,7 +70,11 @@ export function GoogleSSOButton({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const clientId = useMemo(
-    () => process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+    () =>
+      String(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "")
+        .split(",")
+        .map((value) => value.trim())
+        .find(Boolean) || "",
     []
   );
 
@@ -124,6 +129,15 @@ export function GoogleSSOButton({
           } finally {
             setIsLoading(false);
           }
+        },
+        error_callback: (error) => {
+          const message =
+            error?.message ||
+            (error?.type
+              ? `Google sign-in failed: ${error.type.replace(/_/g, " ")}`
+              : "Google sign-in failed");
+          toast.error(message);
+          setIsLoading(false);
         },
       });
 

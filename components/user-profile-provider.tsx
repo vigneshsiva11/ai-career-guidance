@@ -24,6 +24,7 @@ type UserProfileContextValue = {
 };
 
 const STORAGE_KEY = "classless:user-full-profile:v1";
+const AUTH_STORAGE_KEY = "classless_user";
 const STALE_AFTER_MS = 5 * 60 * 1000;
 
 let memoryCache: { data: FullProfilePayload; cachedAtMs: number } | null = null;
@@ -56,6 +57,19 @@ function persistProfile(entry: { data: FullProfilePayload; cachedAtMs: number } 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entry));
   } catch {
     // Ignore localStorage write failures so the in-memory cache still works.
+  }
+}
+
+function hasStoredAuthHint() {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return Boolean(parsed && typeof parsed === "object" && parsed.id);
+  } catch {
+    return false;
   }
 }
 
@@ -125,6 +139,15 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
 
     inflightRequest = (async () => {
       try {
+        if (!force && !hasStoredAuthHint()) {
+          memoryCache = null;
+          persistProfile(null);
+          setData(null);
+          setStatus("unauthorized");
+          setError("");
+          return null;
+        }
+
         const response = await fetch("/api/user/full-profile", {
           method: "GET",
           credentials: "include",
@@ -137,6 +160,9 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
         if (response.status === 401) {
           memoryCache = null;
           persistProfile(null);
+          if (typeof window !== "undefined") {
+            window.localStorage.removeItem(AUTH_STORAGE_KEY);
+          }
           setData(null);
           setStatus("unauthorized");
           setError("");
