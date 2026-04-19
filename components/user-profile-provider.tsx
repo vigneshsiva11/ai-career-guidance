@@ -208,7 +208,7 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
       }
     }
 
-    void refreshProfile();
+    void refreshProfile({ force: hasStoredAuthHint() });
   }, [refreshProfile]);
 
   useEffect(() => {
@@ -217,10 +217,12 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
     };
 
     window.addEventListener("classless:auth-changed", handleAuthChanged);
+    window.addEventListener("classless:profile-changed", handleAuthChanged);
     window.addEventListener("storage", handleAuthChanged);
 
     return () => {
       window.removeEventListener("classless:auth-changed", handleAuthChanged);
+      window.removeEventListener("classless:profile-changed", handleAuthChanged);
       window.removeEventListener("storage", handleAuthChanged);
     };
   }, [refreshProfile]);

@@ -251,7 +251,15 @@ async function completeAssessment(params: {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  await UserModel.updateOne({ _id: user._id }, { $set: { assessmentCompleted: true } });
+  await UserModel.updateOne(
+    { _id: user._id },
+    {
+      $set: {
+        assessmentCompleted: true,
+        selectedRole: generated.recommendedCareer,
+      },
+    }
+  );
 
   await logUserActivity(user._id.toString(), "ROADMAP_GENERATED", {
     persona: generated.careerPersona,
@@ -267,6 +275,7 @@ async function completeAssessment(params: {
     result: {
       strengthProfile: generated.strengthProfile,
       careerPersona: generated.careerPersona,
+      selectedRole: generated.recommendedCareer,
       suggestedCareerPath: generated.recommendedCareer,
       roadmap: generated.roadmap,
       requiredSkills: generated.requiredSkills || {

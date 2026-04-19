@@ -123,6 +123,21 @@ export default function AssessmentPage() {
       }
 
       if (result.data?.completed || result.data?.assessmentCompleted) {
+        const selectedRole = result.data?.result?.suggestedCareerPath || "";
+        try {
+          const currentUser = JSON.parse(localStorage.getItem("classless_user") || "{}");
+          localStorage.setItem(
+            "classless_user",
+            JSON.stringify({
+              ...currentUser,
+              assessmentCompleted: true,
+              selectedRole,
+            })
+          );
+        } catch {
+          // Ignore local cache issues; the server profile refresh below is authoritative.
+        }
+        window.dispatchEvent(new Event("classless:profile-changed"));
         router.replace("/dashboard");
         return;
       }
